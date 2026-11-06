@@ -1,0 +1,256 @@
+---
+import LocalIcon from "@/components/LocalIcon.astro";
+import Icon from "@/components/ui/Icon.astro";
+import { categoryMeta } from "@/config/categories";
+import { secondaryNavigation, siteConfig } from "@/config/site";
+import {
+  categories,
+  categorySlug,
+  getByCategory,
+  postHref,
+  storyLayoutFor,
+  visiblePosts,
+  type Post,
+} from "@/lib/posts";
+import { socialIconFor } from "@/lib/socials";
+
+/**
+ * The site menu, laid out as a contents page: every section as a numbered row
+ * with its blurb and its count, then the opening layouts and the site pages
+ * side by side, then the signup. It opens from the right, under the Menu
+ * control in the bar.
+ */
+interface Props {
+  posts: Post[];
+}
+
+const posts = visiblePosts(Astro.props.posts);
+const currentPath = Astro.url.pathname;
+
+/* One row per section, skipping any with nothing published yet. */
+const sections = categories
+  .map((category) => ({
+    label: category,
+    href: `/category/${categorySlug(category)}/`,
+    blurb: categoryMeta[category].blurb,
+    count: getByCategory(posts, category).length,
+  }))
+  .filter((section) => section.count > 0);
+
+/*
+ * The layouts menu is derived from the posts rather than hand-listed, so it
+ * keeps pointing at real posts as the demo archive changes — one live
+ * example per opening treatment, and nothing at all for a treatment no post
+ * currently uses.
+ */
+const storyLayouts = (["standard", "banner", "cover", "immersive"] as const)
+  .map((layout) => {
+    const example = posts.find((post) => storyLayoutFor(post) === layout);
+    if (!example) return undefined;
+    return {
+      label: `${layout[0].toUpperCase()}${layout.slice(1)}`,
+      href: postHref(example),
+    };
+  })
+  .filter((item) => item !== undefined);
+---
+
+<div class="drawer-scrim" data-drawer-scrim data-drawer-close aria-hidden="true"></div>
+
+<aside id="site-drawer" class="drawer" aria-label="Site menu" hidden data-drawer-panel>
+  <div class="drawer__bar">
+    <a href="/" class="wordmark" aria-label={`${siteConfig.name} home`}>{siteConfig.name}</a>
+    <button type="button" class="icon-btn icon-btn--line" data-drawer-close aria-label="Close menu">
+      <Icon name="close" size={18} />
+    </button>
+  </div>
+
+  <div class="drawer__body">
+    <button type="button" class="drawer__search" data-search-toggle>
+      <Icon name="search" size={16} />
+      <span>Search recipes</span>
+      <kbd aria-hidden="true">/</kbd>
+    </button>
+
+    <nav class="drawer__group" aria-label="Sections">
+      <div class="drawer__head">
+        <p class="label txt-dim">Contents</p>
+        <p class="label txt-dim">{posts.length} {posts.length === 1 ? "post" : "posts"}</p>
+      </div>
+      <ol class="drawer__toc">
+        {
+          sections.map((item) => (
+            <li>
+              <a
+                class="drawer__toc-row"
+                href={item.href}
+                aria-current={currentPath === item.href ? "page" : undefined}
+              >
+                <span>
+                  <span class="drawer__toc-name">{item.label}</span>
+                  <span class="drawer__toc-blurb">{item.blurb}</span>
+                </span>
+                <span class="label drawer__toc-count">{item.count}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <div class="drawer__grid">
+      {
+        storyLayouts.length > 0 && (
+          <nav class="drawer__group" aria-label="Post layouts">
+            <p class="label txt-dim">Post layouts</p>
+            <ul class="drawer__list">
+              {storyLayouts.map((item) => (
+                <li>
+                  <a class="drawer__small" href={item.href}>
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+
+      <nav class="drawer__group" aria-label="The site">
+        <p class="label txt-dim">The site</p>
+        <ul class="drawer__list">
+          {
+            secondaryNavigation.map((item) => (
+              <li>
+                <a
+                  class="drawer__small"
+                  href={item.href}
+                  aria-current={currentPath === item.href ? "page" : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="drawer__foot">
+    <p class="drawer__foot-copy">{siteConfig.newsletter.title}</p>
+    <div class="drawer__foot-row">
+      <a class="btn" href="/#newsletter">Subscribe</a>
+      <ul class="drawer__socials">
+        {
+          siteConfig.socials.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="icon-btn"
+                aria-label={item.label}
+                rel={item.href.startsWith("http") ? "noreferrer" : undefined}
+              >
+                <LocalIcon name={socialIconFor(item.label)} className="h-4 w-4" />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .drawer__list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const drawer = document.querySelector("[data-drawer-panel]");
+    const scrim = document.querySelector("[data-drawer-scrim]");
+    const openers = document.querySelectorAll("[data-drawer-open]");
+    const closers = document.querySelectorAll("[data-drawer-close]");
+    if (!drawer || openers.length === 0) return;
+
+    const focusableSelector =
+      'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    let inertedElements = [];
+    let lastOpener;
+
+    const setOpen = (open) => {
+      drawer.hidden = !open;
+      document.documentElement.classList.toggle("has-open-drawer", open);
+      openers.forEach((button) => button.setAttribute("aria-expanded", String(open)));
+
+      if (open) {
+        // Everything behind the drawer goes inert, so a screen reader and the
+        // tab key both stay inside it while it is up. The scrim is exempt: it
+        // is a sibling rather than a child, and an inert element swallows the
+        // click that is supposed to close the drawer. It carries nothing
+        // focusable and is already aria-hidden, so the trap still holds.
+        inertedElements = Array.from(document.body.children).filter(
+          (element) => element !== drawer && element !== scrim && !element.inert,
+        );
+        inertedElements.forEach((element) => {
+          element.inert = true;
+        });
+        window.requestAnimationFrame(() => drawer.querySelector(focusableSelector)?.focus());
+      } else {
+        inertedElements.forEach((element) => {
+          element.inert = false;
+        });
+        inertedElements = [];
+        lastOpener?.focus();
+      }
+    };
+
+    openers.forEach((button) => {
+      button.addEventListener("click", () => {
+        lastOpener = button;
+        setOpen(drawer.hidden);
+      });
+    });
+
+    closers.forEach((button) => button.addEventListener("click", () => setOpen(false)));
+
+    // The drawer marks its siblings inert, and the search dialog is one of
+    // them — opening search from in here without closing first would put up a
+    // modal that cannot take focus. The header asks us to stand down first.
+    document.addEventListener("supper:drawer-close", () => setOpen(false));
+    drawer.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => setOpen(false));
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (drawer.hidden) return;
+
+      if (event.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const focusable = Array.from(drawer.querySelectorAll(focusableSelector)).filter(
+        (element) => element.offsetParent !== null,
+      );
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  })();
+</script>

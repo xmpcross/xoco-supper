@@ -1,0 +1,70 @@
+---
+import { Image } from "astro:assets";
+import { categoryMeta } from "@/config/categories";
+import { categorySlug, getByCategory, type Category, type Post } from "@/lib/posts";
+
+/**
+ * The site's table of contents. Each tile takes its artwork from the newest
+ * recipe in that section, so the row restages itself as the archive grows and
+ * there is no separate set of section covers to keep in sync.
+ *
+ * It scrolls rather than wrapping. Seven sections will not fit a desktop row at
+ * a readable size, and a grid of four-then-three reads as a mistake — so the
+ * row is a rail, and the tile clipped by the right edge is what says there is
+ * more of it. Sections with nothing published are skipped.
+ */
+interface Props {
+  categories: readonly Category[];
+  posts: Post[];
+  /** Names the track so `RailNav` can find it. */
+  id?: string;
+  class?: string;
+}
+
+const { categories, posts, id, class: className = "" } = Astro.props;
+
+const tiles = categories
+  .map((category) => {
+    const list = getByCategory(posts, category);
+    return {
+      category,
+      slug: categorySlug(category),
+      blurb: categoryMeta[category].blurb,
+      count: list.length,
+      cover: list[0]?.data.cover,
+    };
+  })
+  .filter((tile) => tile.cover);
+---
+
+<div
+  class:list={["rail rail--bleed", className]}
+  id={id}
+  role="group"
+  aria-label="Sections"
+  tabindex="0"
+>
+  {
+    tiles.map((tile) => (
+      <a href={`/category/${tile.slug}/`} class="tile">
+        <Image
+          src={tile.cover!.src}
+          alt=""
+          widths={[320, 480, 640, 880, 1120]}
+          sizes="(min-width: 96rem) calc(20vw - 29px), (min-width: 64rem) calc(25vw - 24px), (min-width: 40rem) 40vw, calc(74vw - 24px)"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="tile__scrim" aria-hidden="true" />
+
+        <span class="tile__body">
+          <span class="tile__name">{tile.category}</span>
+          <span class="tile__blurb">{tile.blurb}</span>
+          <span class="label tile__count">
+            {tile.count} {tile.count === 1 ? "recipe" : "recipes"}
+          </span>
+        </span>
+      </a>
+    ))
+  }
+</div>

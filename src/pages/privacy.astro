@@ -1,0 +1,55 @@
+---
+import { getCollection } from "astro:content";
+import PageHeader from "@/components/PageHeader.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { siteConfig } from "@/config/site";
+import { visiblePosts } from "@/lib/posts";
+
+const allPosts = visiblePosts(await getCollection("posts"));
+---
+
+<BaseLayout title="Privacy" description={`Privacy policy for ${siteConfig.name}.`}>
+  <SiteHeader posts={allPosts} />
+  <main id="content">
+    <div class="container-reading">
+      <PageHeader
+        eyebrow="Legal"
+        title="Privacy Policy"
+        description="What a publication running this theme may collect, how that information can be used, and how readers can get in touch about privacy requests."
+      />
+    </div>
+
+    <section class="container-reading section section-top">
+      <div class="prose">
+        <h2>Information you collect</h2>
+        <p>
+          The site may collect newsletter email addresses, contact messages, analytics events, and
+          advertising-related data when those features are enabled.
+        </p>
+
+        <h2>How you use it</h2>
+        <p>
+          Collected data may be used for publishing, responding to inquiries, sending email,
+          measuring traffic, improving content, and complying with legal obligations.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+          {
+            siteConfig.email ? (
+              <>
+                For privacy requests, contact{" "}
+                <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>.
+              </>
+            ) : (
+              "Add a privacy contact address in the central site configuration before publishing."
+            )
+          }
+        </p>
+      </div>
+    </section>
+  </main>
+  <SiteFooter />
+</BaseLayout>

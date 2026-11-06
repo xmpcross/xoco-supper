@@ -1,0 +1,236 @@
+---
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import CollectionTiles from "@/components/CollectionTiles.astro";
+import HeroBoard from "@/components/HeroBoard.astro";
+import NoteCard from "@/components/NoteCard.astro";
+import PostCard from "@/components/PostCard.astro";
+import RailNav from "@/components/RailNav.astro";
+import RankedList from "@/components/RankedList.astro";
+import SectionHeader from "@/components/SectionHeader.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import TrendingColumns from "@/components/TrendingColumns.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import onRepeat from "@/assets/images/home/on-repeat.jpg";
+import { categories, NOTES_CATEGORY } from "@/config/categories";
+import { siteConfig } from "@/config/site";
+import {
+  excludePosts,
+  getByCategory,
+  getEditorsPicks,
+  getFeatured,
+  getTrending,
+  visiblePosts,
+} from "@/lib/posts";
+import { onlyRecipes, quickRecipes } from "@/lib/recipes";
+
+const allPosts = visiblePosts(await getCollection("posts"));
+const allRecipes = onlyRecipes(allPosts);
+
+/*
+ * The front page is dealt from the top down: each block takes the next slice of
+ * the archive, so nothing repeats between them.
+ *
+ * Three blocks deliberately draw from the whole archive again, and each one is
+ * a *criterion* rather than a position — the quick rail is "done in under half
+ * an hour", the on-repeat rail is "flagged in frontmatter", the ranked list is
+ * "most cooked". A recipe qualifying for one of those while also running
+ * further up the page is the right answer, not a duplicate: a reader who came
+ * looking for something fast should find it in the fast row.
+ */
+let pool = allPosts;
+
+/** Hands a block its posts and takes them out of circulation. */
+const take = <T extends typeof pool>(chosen: T) => {
+  pool = excludePosts(pool, chosen);
+  return chosen;
+};
+
+/** The hero: the post flagged `featured` (newest first), or simply the newest. */
+const [featured] = take(getFeatured(pool, 1));
+/** The row of type under it: the next four, by publish date. */
+const alsoNew = take(pool.slice(0, 4));
+/** The reading, as dark cards. Whatever is left of the notes section. */
+const notes = take(getByCategory(pool, NOTES_CATEGORY, 5));
+/** The small-plates section, as a row of plates. Dealt before the recipe grid
+    so the grid cannot eat the section's newest dishes. */
+const smallPlates = take(getByCategory(pool, "Small Plates", 5));
+/** The next ten recipes — the dense grid that carries the page. */
+const fresh = take(onlyRecipes(pool).slice(0, 10));
+
+/** Recipes on the table in half an hour, quickest first. */
+const quick = quickRecipes(allRecipes, 30, 8);
+/** Flagged `editorsPick: true`; falls back to the newest recipes. */
+const onRepeatPosts = getEditorsPicks(allRecipes, 8);
+/**
+ * The tail, as a ledger rather than a fifth grid of pictures. Wire real
+ * analytics into `getTrending` if you have them — nothing else on the page
+ * depends on how this list is ordered.
+ */
+const mostCooked = getTrending(allRecipes, 5);
+/** The sweet section, as a text column beside the chart — a criterion, like
+    the rails, so it holds four whatever the rest of the page has taken. */
+const sweet = getByCategory(allPosts, "Sweet", 4);
+
+const notesBadge = (index: number) =>
+  ["Note", "Guide", "Kit", "Shopping", "Pantry"][index] ?? "Note";
+---
+
+<BaseLayout bodyClass="has-overlay-header">
+  <SiteHeader posts={allPosts} />
+  <main id="content">
+    <h1 class="sr-only">{siteConfig.name} — {siteConfig.tagline}</h1>
+
+    <div class="section">
+      <HeroBoard lead={featured} also={alsoNew} />
+    </div>
+
+    <section class="container section" aria-labelledby="home-sections">
+      <SectionHeader
+        title="Cook by section"
+        href="/posts/"
+        linkLabel="Everything"
+        id="home-sections"
+      >
+        <RailNav rail="rail-sections" label="the sections" />
+      </SectionHeader>
+      <CollectionTiles id="rail-sections" categories={categories} posts={allPosts} />
+    </section>
+
+    {
+      fresh.length > 0 && (
+        <section class="container section" aria-labelledby="home-fresh">
+          <SectionHeader
+            title="Fresh from the kitchen"
+            count={`${allRecipes.length} recipes`}
+            href="/posts/"
+            id="home-fresh"
+          />
+          <div class="grid-tall grid-tall--flush">
+            {fresh.map((post) => (
+              <PostCard post={post} variant="tall" headingLevel="h3" />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      quick.length > 0 && (
+        <section class="container section" aria-labelledby="home-quick">
+          <SectionHeader
+            title="On the table in half an hour"
+            href="/posts/?time=under-30"
+            linkLabel="All the quick ones"
+            id="home-quick"
+          >
+            <RailNav rail="rail-quick" label="the quick recipes" />
+          </SectionHeader>
+          <div
+            class="rail rail--bleed"
+            id="rail-quick"
+            role="group"
+            aria-label="Recipes under thirty minutes"
+            tabindex="0"
+          >
+            {quick.map((post) => (
+              <PostCard post={post} variant="tall" headingLevel="h3" />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      notes.length > 0 && (
+        <section class="container section" aria-labelledby="home-notes">
+          <SectionHeader
+            title="Worth reading first"
+            href="/category/field-notes/"
+            id="home-notes"
+          />
+          <div class="grid-tall grid-tall--flush">
+            {notes.map((post, index) => (
+              <NoteCard post={post} badge={notesBadge(index)} headingLevel="h3" />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      smallPlates.length > 0 && (
+        <section class="container section" aria-labelledby="home-small">
+          <SectionHeader
+            title="Before dinner"
+            href="/category/small-plates/"
+            id="home-small"
+          />
+          <div class="grid-tall grid-tall--flush">
+            {smallPlates.map((post) => (
+              <PostCard post={post} variant="plate" headingLevel="h3" />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      onRepeatPosts.length > 0 && (
+        <section class="container section" aria-labelledby="home-repeat">
+          <h2 class="sr-only" id="home-repeat">Cooked on repeat</h2>
+          <div class="band">
+            <Image
+              src={onRepeat}
+              alt=""
+              widths={[720, 1080, 1440, 2000]}
+              sizes="100vw"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="band__tint" aria-hidden="true"></div>
+            <div class="band__body">
+              <div class="band__copy">
+                <p class="band__title">Cooked on repeat</p>
+                <p class="txt-s band__note">
+                  The ones that stopped being recipes here and became the way we cook them.
+                </p>
+              </div>
+              {/* This row has no section heading of its own — the band is the
+                  heading — so its arrows ride in the band's own corner. */}
+              <RailNav rail="rail-repeat" label="the repeats" onImage />
+            </div>
+          </div>
+
+          <div
+            class="rail rail--bleed section-top-sm"
+            id="rail-repeat"
+            role="group"
+            aria-label="Recipes cooked on repeat"
+            tabindex="0"
+          >
+            {onRepeatPosts.map((post) => (
+              <PostCard post={post} variant="tall" headingLevel="h3" />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <section class="container section" aria-labelledby="home-most-cooked">
+      <div class="split">
+        <div class="min-w-0">
+          <SectionHeader title="Most cooked" id="home-most-cooked" />
+          <RankedList posts={mostCooked} />
+        </div>
+        <div class="split__aside">
+          <SectionHeader title="Something sweet" href="/category/sweet/" linkLabel="All the sweet ones" />
+          <TrendingColumns posts={sweet} variant="stack" headingLevel="h4" />
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <SiteFooter />
+</BaseLayout>

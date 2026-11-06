@@ -1,0 +1,64 @@
+---
+import { getCollection } from "astro:content";
+import PostRow from "@/components/PostRow.astro";
+import SectionHeader from "@/components/SectionHeader.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import SwapText from "@/components/ui/SwapText.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { visiblePosts } from "@/lib/posts";
+
+const allPosts = visiblePosts(await getCollection("posts"));
+const suggestions = allPosts.slice(0, 4);
+---
+
+<BaseLayout title="Page not found" description="The page you requested could not be found." noindex>
+  <SiteHeader posts={allPosts} />
+  <main id="content">
+    <div class="container">
+      <div class="notfound">
+        <p class="label notfound__code">Error 404</p>
+        <h1 class="txt-d">This page has moved on.</h1>
+        <p class="txt-l txt-dim">
+          The recipe may have been renamed, or the URL may be mistyped. Start from the index or work
+          through the archive.
+        </p>
+        <div class="notfound__actions">
+          <a class="btn btn--lg" href="/"><SwapText text="Front page" /></a>
+          <a class="btn btn--line btn--lg" href="/posts/"><SwapText text="Archive" /></a>
+        </div>
+      </div>
+
+      <section class="section" aria-labelledby="notfound-suggestions">
+        <SectionHeader title="Recently published" href="/posts/" id="notfound-suggestions" />
+        <div class="index-list">
+          {suggestions.map((post) => <PostRow post={post} headingLevel="h2" eager />)}
+        </div>
+      </section>
+    </div>
+  </main>
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .notfound {
+    display: grid;
+    justify-items: start;
+    gap: 1.25rem;
+    max-width: 44rem;
+    border-bottom: 1px solid var(--border);
+    padding-block: clamp(3rem, 8vw, 5.5rem) 3rem;
+    margin-bottom: clamp(2rem, 5vw, 3rem);
+  }
+
+  .notfound__code {
+    color: var(--accent);
+  }
+
+  .notfound__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    margin-top: 0.5rem;
+  }
+</style>

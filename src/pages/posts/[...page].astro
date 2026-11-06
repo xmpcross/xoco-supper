@@ -1,0 +1,68 @@
+---
+import { getCollection } from "astro:content";
+import ArchiveFilters from "@/components/ArchiveFilters.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import Pagination from "@/components/Pagination.astro";
+import PostRow from "@/components/PostRow.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { siteConfig } from "@/config/site";
+import { visiblePosts, type Post } from "@/lib/posts";
+import type { GetStaticPaths, Page } from "astro";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const posts = visiblePosts(await getCollection("posts"));
+  return paginate(posts, { pageSize: 12 });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  page: Page<Post>;
+}
+
+const { page } = Astro.props;
+const allPosts = visiblePosts(await getCollection("posts"));
+const title = page.currentPage === 1 ? "Archive" : `Archive - Page ${page.currentPage}`;
+const description = `Every ${siteConfig.name} recipe and field note, newest first.`;
+const withTrailingSlash = (url: string | undefined) => (url && !url.endsWith("/") ? `${url}/` : url);
+const prevUrl = withTrailingSlash(page.url.prev);
+const nextUrl = withTrailingSlash(page.url.next);
+---
+
+<BaseLayout title={title} description={description} prevUrl={prevUrl} nextUrl={nextUrl}>
+  <SiteHeader posts={allPosts} />
+  <main id="content">
+    <div class="container">
+      <PageHeader
+        eyebrow="The archive"
+        title="Everything we have published"
+        description={siteConfig.description}
+        meta={`${page.total} ${page.total === 1 ? "post" : "posts"} · Page ${page.currentPage} of ${page.lastPage}`}
+        divider={false}
+        align="center"
+      />
+      <ArchiveFilters />
+    </div>
+
+    <section class="container section" aria-label="Archive">
+      <div class="index-list" data-archive-list>
+        {
+          page.data.map((post, index) => (
+            <PostRow post={post} headingLevel="h2" eager={index < 3} />
+          ))
+        }
+      </div>
+      <div class="index-list" data-filter-results hidden></div>
+      <div data-archive-pagination>
+        <Pagination
+          prevUrl={prevUrl}
+          nextUrl={nextUrl}
+          currentPage={page.currentPage}
+          lastPage={page.lastPage}
+          label="Archive pagination"
+        />
+      </div>
+    </section>
+  </main>
+  <SiteFooter />
+</BaseLayout>

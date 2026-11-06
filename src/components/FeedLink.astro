@@ -1,0 +1,40 @@
+---
+import LocalIcon from "@/components/LocalIcon.astro";
+
+/**
+ * The subscribe affordance on a section or contributor page. A feed nobody can
+ * find is a feed nobody uses, so each one is offered where the stories it
+ * carries are, not only in the footer.
+ */
+interface Props {
+  href: string;
+  label: string;
+}
+
+const { href, label } = Astro.props;
+---
+
+<a class="feed-link" href={href} type="application/rss+xml">
+  <LocalIcon name="rss" className="feed-link__icon" />
+  <span class="label">{label}</span>
+</a>
+
+<style>
+  .feed-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--muted-foreground);
+    transition: color 0.25s ease;
+  }
+
+  .feed-link:hover,
+  .feed-link:focus-visible {
+    color: var(--accent);
+  }
+
+  .feed-link :global(.feed-link__icon) {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+</style>

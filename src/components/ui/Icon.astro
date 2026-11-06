@@ -1,0 +1,112 @@
+---
+/**
+ * Small stroked UI icons on a 24x24 grid. Editorial chrome only — social and
+ * brand marks still come from LocalIcon.
+ */
+export type IconName =
+  | "arrow-right"
+  | "arrow-left"
+  | "arrow-up-right"
+  | "chevron-down"
+  | "search"
+  | "bookmark"
+  | "menu"
+  | "close"
+  | "calendar"
+  | "clock"
+  | "flame"
+  | "bowl"
+  | "plus"
+  | "minus"
+  | "check"
+  | "printer"
+  | "sliders";
+
+interface Props {
+  name: IconName;
+  class?: string;
+  size?: number;
+}
+
+const { name, class: className = "", size = 16 } = Astro.props;
+---
+
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+>
+  {name === "arrow-right" && <path d="M5 12h13m-6-6 6 6-6 6" />}
+  {name === "arrow-left" && <path d="M19 12H6m6-6-6 6 6 6" />}
+  {name === "arrow-up-right" && <path d="M7 17 17 7m-7 0h7v7" />}
+  {name === "chevron-down" && <path d="m6 9 6 6 6-6" />}
+  {
+    name === "calendar" && (
+      <>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M8 3v4m8-4v4M3 10h18" />
+      </>
+    )
+  }
+  {
+    name === "clock" && (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5.2l3.2 1.9" />
+      </>
+    )
+  }
+  {
+    /* Heat, not fire: the pan is hot, the recipe is not on fire. */
+    name === "flame" && (
+      <path d="M12 3s4.2 3.6 4.2 7.6a4.2 4.2 0 0 1-8.4 0C7.8 8.4 9 6.6 9 6.6S9.4 9 11 9c1.2 0 1.4-1.2 1.4-2.4C12.4 5.2 12 3 12 3Zm0 18c3.9 0 7-2.3 7-5.2H5c0 2.9 3.1 5.2 7 5.2Z" />
+    )
+  }
+  {
+    /* Servings. A bowl with steam, which reads at 14px where a plate does not. */
+    name === "bowl" && (
+      <>
+        <path d="M3 11h18a9 9 0 0 1-18 0Z" />
+        <path d="M9 7c0-1.2 1-1.6 1-2.8m4 2.8c0-1.2 1-1.6 1-2.8" />
+      </>
+    )
+  }
+  {name === "plus" && <path d="M12 5v14M5 12h14" />}
+  {name === "minus" && <path d="M5 12h14" />}
+  {name === "check" && <path d="m5 13 4.5 4.5L19 7" />}
+  {
+    name === "printer" && (
+      <>
+        <path d="M7 8V3h10v5M7 18H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" />
+        <rect x="7" y="14" width="10" height="7" rx="1" />
+      </>
+    )
+  }
+  {
+    name === "sliders" && (
+      <>
+        <path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1" />
+        <circle cx="15" cy="7" r="2" />
+        <circle cx="9" cy="12" r="2" />
+        <circle cx="17" cy="17" r="2" />
+      </>
+    )
+  }
+  {name === "search" && (
+      <>
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="m16.5 16.5 4 4" />
+      </>
+    )}
+  {name === "bookmark" && <path d="M6.5 4.5h11V21L12 16.6 6.5 21Z" />}
+  {name === "menu" && <path d="M4 7h16M4 12h16M4 17h16" />}
+  {name === "close" && <path d="m6 6 12 12M18 6 6 18" />}
+</svg>

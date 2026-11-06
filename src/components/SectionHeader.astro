@@ -1,0 +1,49 @@
+---
+/**
+ * Every section opens the same way: the name at subhead scale, a dotted leader,
+ * and an underlined way out of it — one line of a contents page. Nine blocks
+ * run down the front page, so each one has to announce itself in a glance,
+ * which is why the name is set as type rather than as an 11px eyebrow.
+ *
+ * Anything passed to the default slot joins the right-hand end of the bar,
+ * before the link. It is where a rail's paging arrows go — beside the heading
+ * rather than over the artwork.
+ *
+ * There is no rule above the heading: the leader already draws the line, and
+ * a second one over every block turns the page into a form.
+ */
+interface Props {
+  title: string;
+  count?: string;
+  href?: string;
+  linkLabel?: string;
+  id?: string;
+  /** Accepted for compatibility; the leader replaced the rule it used to draw. */
+  ruled?: boolean;
+  class?: string;
+}
+
+const { title, count, href, linkLabel = "See all", id, class: className = "" } = Astro.props;
+---
+
+<div class:list={["section-head", className]}>
+  <div class="section-head__bar">
+    <h2 class="txt-h3 section-head__name" id={id}>
+      {title}
+      {count && <span class="section-head__count txt-dim">{count}</span>}
+    </h2>
+
+    <span class="section-head__leader" aria-hidden="true"></span>
+
+    <div class="section-head__end">
+      <slot />
+      {
+        href && (
+          <a class="section-link" href={href}>
+            {linkLabel}
+          </a>
+        )
+      }
+    </div>
+  </div>
+</div>

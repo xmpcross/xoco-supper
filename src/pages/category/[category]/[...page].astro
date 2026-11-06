@@ -1,0 +1,131 @@
+---
+import { getCollection } from "astro:content";
+import type { GetStaticPaths, Page } from "astro";
+import ArchiveFilters from "@/components/ArchiveFilters.astro";
+import FeedLink from "@/components/FeedLink.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import Pagination from "@/components/Pagination.astro";
+import PostCard from "@/components/PostCard.astro";
+import PostRow from "@/components/PostRow.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { categoryLayouts, categoryMeta, NOTES_CATEGORY } from "@/config/categories";
+import { siteConfig } from "@/config/site";
+import {
+  categories,
+  categorySlug,
+  getByCategory,
+  visiblePosts,
+  type Category,
+  type Post,
+} from "@/lib/posts";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const allPosts = visiblePosts(await getCollection("posts"));
+
+  return categories.flatMap((category) => {
+    const posts = getByCategory(allPosts, category);
+
+    return paginate(posts, {
+      pageSize: 12,
+      params: { category: categorySlug(category) },
+      props: { category, allPosts },
+    });
+  });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  category: Category;
+  allPosts: Post[];
+  page: Page<Post>;
+}
+
+const { category, allPosts, page } = Astro.props;
+const posts = page.data;
+const allCategoryPosts = getByCategory(allPosts, category);
+const layout = categoryLayouts[category];
+/* The reading section has no times or difficulties to filter by. */
+const hasRecipes = category !== NOTES_CATEGORY;
+const title = page.currentPage === 1 ? `${category}` : `${category} - Page ${page.currentPage}`;
+const description = categoryMeta[category].description;
+const withTrailingSlash = (url: string | undefined) => (url && !url.endsWith("/") ? `${url}/` : url);
+const prevUrl = withTrailingSlash(page.url.prev);
+const nextUrl = withTrailingSlash(page.url.next);
+const latest = allCategoryPosts[0];
+const feedHref = `/category/${categorySlug(category)}/rss.xml`;
+const meta = [
+  `${page.total} ${page.total === 1 ? "post" : "posts"}`,
+  page.lastPage > 1 ? `Page ${page.currentPage} of ${page.lastPage}` : null,
+]
+  .filter(Boolean)
+  .join(" · ");
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  image={latest?.data.cover.src}
+  imageAlt={latest?.data.cover.alt}
+  prevUrl={prevUrl}
+  nextUrl={nextUrl}
+  feed={{ href: feedHref, title: `${category} - ${siteConfig.name}` }}
+>
+  <SiteHeader posts={allPosts} />
+  <main id="content">
+    <div class="container">
+      <PageHeader
+        eyebrow="Section"
+        title={category}
+        description={description}
+        meta={meta}
+        divider={false}
+        align="center"
+      >
+        <FeedLink href={feedHref} label={`Follow ${category}`} />
+      </PageHeader>
+      <ArchiveFilters category={category} recipes={hasRecipes} />
+    </div>
+
+    <section class="container section" aria-label={`${category} posts`}>
+      <div data-archive-list>
+        {
+          layout === "grid" && posts.length > 0 && (
+            <div class="grid-tall">
+              {posts.map((post, index) => (
+                <PostCard post={post} headingLevel="h2" showCategory={false} eager={index < 4} />
+              ))}
+            </div>
+          )
+        }
+
+        {
+          layout === "list" && (
+            <div class="index-list">
+              {posts.map((post, index) => (
+                <PostRow post={post} headingLevel="h2" eager={index < 3} />
+              ))}
+            </div>
+          )
+        }
+
+        {posts.length === 0 && <p class="txt-m txt-dim">More recipes are coming soon.</p>}
+      </div>
+
+      <div class="index-list" data-filter-results hidden />
+
+      <div data-archive-pagination>
+        <Pagination
+          prevUrl={prevUrl}
+          nextUrl={nextUrl}
+          currentPage={page.currentPage}
+          lastPage={page.lastPage}
+          label={`${category} pagination`}
+        />
+      </div>
+    </section>
+
+  </main>
+  <SiteFooter />
+</BaseLayout>
+

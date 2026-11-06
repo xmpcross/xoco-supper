@@ -1,0 +1,377 @@
+---
+import { getCollection, render } from "astro:content";
+import PostCard from "@/components/PostCard.astro";
+import SaveButton from "@/components/SaveButton.astro";
+import ShareButton from "@/components/ShareButton.astro";
+import ShareSheet from "@/components/ShareSheet.astro";
+import Lightbox from "@/components/content/Lightbox.astro";
+import PostHero from "@/components/PostHero.astro";
+import RecipeBrief from "@/components/recipe/RecipeBrief.astro";
+import RecipeIngredients from "@/components/recipe/RecipeIngredients.astro";
+import RecipeMethod from "@/components/recipe/RecipeMethod.astro";
+import RecipeNotes from "@/components/recipe/RecipeNotes.astro";
+import UnitsText from "@/components/recipe/UnitsText.astro";
+import SectionHeader from "@/components/SectionHeader.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import Avatar from "@/components/ui/Avatar.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import {
+  authorSlug,
+  formatDate,
+  getRelated,
+  postBylines,
+  postSlug,
+  storyLayoutFor,
+  tagSlug,
+  visiblePosts,
+  type Post,
+} from "@/lib/posts";
+import { isRecipe } from "@/lib/recipes";
+import { postBreadcrumbSchema, postSchema } from "@/lib/schema";
+import { siteConfig } from "@/config/site";
+
+export async function getStaticPaths() {
+  const allPosts = visiblePosts(await getCollection("posts"));
+  return allPosts.map((post) => ({
+    params: { slug: postSlug(post) },
+    props: { post, allPosts },
+  }));
+}
+
+interface Props {
+  post: Post;
+  allPosts: Post[];
+}
+
+const { post, allPosts } = Astro.props;
+const { Content } = await render(post);
+/* Five, so the row fills at every column count the grid has — `--flush`
+   drops what will not fit. */
+const related = getRelated(allPosts, post, 5);
+const data = post.data;
+const slug = postSlug(post);
+const layout = storyLayoutFor(post);
+/* An immersive opening owns the top of the page, so the header is lifted onto
+   the artwork. */
+const immersive = layout === "immersive";
+const bylines = postBylines(post);
+const articleUrl = new URL(`/post/${slug}/`, siteConfig.siteUrl).toString();
+const absoluteImageUrl = new URL(data.cover.src.src, siteConfig.siteUrl).toString();
+/* A post carrying a recipe is declared as a `Recipe` with its ingredients and
+   its method on it; everything else is an `Article`. Both are followed by the
+   trail the page itself renders — see `src/lib/schema.ts`. */
+const structuredData = [postSchema(post, absoluteImageUrl), postBreadcrumbSchema(post)];
+/** The blocks a recipe adds. `undefined` on a field note. */
+const recipe = isRecipe(post) ? post.data.recipe : undefined;
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.excerpt}
+  image={data.cover.src}
+  imageAlt={data.cover.alt}
+  type="article"
+  structuredData={structuredData}
+  bodyClass={immersive ? "has-overlay-header" : undefined}
+>
+  <SiteHeader posts={allPosts} />
+
+  <div class="reading-progress" aria-hidden="true">
+    <div class="reading-progress__bar" data-reading-progress></div>
+  </div>
+
+  <main id="content">
+    <article data-article>
+      <PostHero post={post} />
+
+      <div class="container-reading post-body">
+{/* The brief opens a recipe rather than closing it: a reader who came to
+            find out how long it takes gets that in the first screen, and the
+            article underneath is then the argument for cooking it rather than a
+            wall to climb first. */}
+        {recipe && <RecipeBrief recipe={recipe} class="recipe-block" />}
+
+        <div class="prose" data-units-text>
+          <Content />
+        </div>
+
+        {/* The recipe proper, after the reading. Ingredients then method then
+            notes, in the order they are used — and every one of them past the
+            prose, because somebody who has cooked it before jumps straight
+            here from the brief. */}
+        {recipe && <RecipeIngredients recipe={recipe} class="recipe-block" />}
+        {recipe && <RecipeMethod recipe={recipe} class="recipe-block" />}
+        {recipe && <RecipeNotes recipe={recipe} class="recipe-block" />}
+        {recipe && <UnitsText />}
+
+        {
+          data.updatedDate && (
+            <p class="label txt-dim post-updated">
+              Updated{" "}
+              <time datetime={data.updatedDate.toISOString()}>
+                {formatDate(data.updatedDate, "long")}
+              </time>
+            </p>
+          )
+        }
+
+        {/* Who wrote it, what it was filed under, then how to pass it on — one
+            rule separating the lot from the reading, and none inside it. */}
+        <footer class="post-footer">
+          <div class="post-authors">
+            {
+              bylines.map((byline) => (
+                <div class="post-author">
+                  <Avatar name={byline.name} size="lg" />
+                  <div>
+                    <p class="txt-h4">
+                      <a class="underline-hover" href={`/author/${authorSlug(byline.name)}/`}>
+                        {byline.name}
+                      </a>
+                    </p>
+                    <p class="txt-s txt-dim">{byline.role}</p>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+
+          {
+            data.tags.length > 0 && (
+              <div>
+                <p class="label txt-dim post-box__title">Filed under</p>
+                <ul class="post-tags" aria-label="Tags">
+                  {data.tags.map((tag) => (
+                    <li>
+                      <a class="chip" href={`/tag/${tagSlug(tag)}/`}>
+                        {tag}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          }
+
+          <div class="post-share posthero__actions">
+            <ShareButton variant="button" />
+            <SaveButton variant="button" slug={slug} kind={recipe ? "Recipe" : "Note"} />
+          </div>
+        </footer>
+      </div>
+    </article>
+
+    {
+      related.length > 0 && (
+        <section class="container section section-top" aria-labelledby="post-related">
+          <SectionHeader
+            title="Cook this next"
+            href="/posts/"
+            linkLabel="All recipes"
+            id="post-related"
+          />
+          <div class="grid-tall grid-tall--flush">
+            {related.map((item) => (
+              <PostCard post={item} variant="tall" headingLevel="h3" />
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </main>
+
+  <ShareSheet title={data.title} url={articleUrl} />
+  <Lightbox />
+  <SiteFooter />
+
+  <script is:inline>
+    (() => {
+      const article = document.querySelector("[data-article]");
+      const progress = document.querySelector("[data-reading-progress]");
+
+      if (article && progress) {
+        let ticking = false;
+
+        const update = () => {
+          const rect = article.getBoundingClientRect();
+          const total = rect.height - window.innerHeight;
+          const read = total > 0 ? Math.min(Math.max(-rect.top / total, 0), 1) : 0;
+          progress.style.setProperty("--progress", `${(read * 100).toFixed(2)}%`);
+          ticking = false;
+        };
+
+        update();
+        window.addEventListener(
+          "scroll",
+          () => {
+            if (ticking) return;
+            ticking = true;
+            window.requestAnimationFrame(update);
+          },
+          { passive: true },
+        );
+        window.addEventListener("resize", update, { passive: true });
+      }
+
+      document.querySelectorAll(".prose pre").forEach((pre, index) => {
+        if (pre.closest(".code-copy-frame")) return;
+
+        const code = pre.querySelector("code");
+        const wrapper = document.createElement("div");
+        const button = document.createElement("button");
+        const status = document.createElement("span");
+        const labelId = `code-copy-${index}`;
+
+        wrapper.className = "code-copy-frame";
+        button.type = "button";
+        button.className = "code-copy-button";
+        button.setAttribute("aria-describedby", labelId);
+        button.textContent = "Copy";
+        status.id = labelId;
+        status.className = "sr-only";
+        status.setAttribute("aria-live", "polite");
+
+        pre.parentNode?.insertBefore(wrapper, pre);
+        wrapper.append(pre, button, status);
+
+        button.addEventListener("click", async () => {
+          try {
+            if (!navigator.clipboard?.writeText) throw new Error("Clipboard API unavailable");
+
+            await navigator.clipboard.writeText(code?.textContent ?? pre.textContent ?? "");
+            button.textContent = "Copied";
+            status.textContent = "Code copied";
+            window.setTimeout(() => {
+              button.textContent = "Copy";
+            }, 1800);
+          } catch {
+            button.textContent = "Failed";
+            status.textContent = "Copy failed";
+            window.setTimeout(() => {
+              button.textContent = "Copy";
+            }, 1800);
+          }
+        });
+      });
+    })();
+  </script>
+
+  <style>
+    /* Title block sits above the cover so the story opens with type rather
+       than with a photograph. */
+    .post-head {
+      padding-block: clamp(2.5rem, 6vw, 4rem) 0;
+    }
+
+    .post-head__meta {
+      display: grid;
+      justify-items: start;
+      gap: 1rem;
+    }
+
+    .post-head__standfirst {
+      max-width: 48ch;
+    }
+
+    .post-head__byline {
+      margin-top: 0.5rem;
+    }
+
+    /* `auto` inline margins matter here: .container-reading centres the figure
+       and a shorthand reset would knock it back to the left edge. */
+    .post-head__figure {
+      margin: 2.5rem auto 0;
+    }
+
+    .post-head__credit {
+      margin-top: 0.75rem;
+    }
+
+    .post-body {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .post-updated {
+      margin-top: 2rem;
+    }
+
+    /* One rule, at the top, marking the end of the reading. The blocks inside
+       are spaced rather than ruled — three hairlines in a column read as a
+       stack of unrelated boxes instead of one closing note. */
+    .post-footer {
+      display: grid;
+      gap: 2rem;
+      margin-top: 2.5rem;
+      border-top: 1px solid var(--border);
+      padding-top: 2rem;
+    }
+
+    .post-box__title {
+      margin-bottom: 1rem;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    /* One row per name. A coauthored post stacks them rather than crowding two
+       portraits onto one line, because each carries its own role. */
+    .post-authors {
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .post-author {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .post-author p + p {
+      margin-top: 0.2rem;
+    }
+
+    /* Code copy affordance, injected by the script above. */
+    .prose :global(.code-copy-frame) {
+      position: relative;
+    }
+
+    .prose :global(.code-copy-frame pre) {
+      padding-top: 3rem;
+    }
+
+    .prose :global(.code-copy-button) {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      background: var(--surface);
+      color: var(--muted-foreground);
+      cursor: pointer;
+      padding: 0.3rem 0.75rem;
+      font-size: var(--fs-label);
+      font-weight: 650;
+      letter-spacing: var(--ls-label);
+      text-transform: uppercase;
+      transition:
+        color 0.18s ease,
+        border-color 0.18s ease,
+        background-color 0.18s ease;
+    }
+
+    .prose :global(.code-copy-button:hover),
+    .prose :global(.code-copy-button:focus-visible) {
+      border-color: var(--accent);
+      background: var(--wash);
+      color: var(--accent);
+    }
+  </style>
+</BaseLayout>

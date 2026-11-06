@@ -1,0 +1,127 @@
+---
+import SavedRuntime from "@/components/SavedRuntime.astro";
+import Icon from "@/components/ui/Icon.astro";
+
+/**
+ * Saves the story to the reader's browser, for the `/saved/` page. Rendered
+ * hidden and revealed by the script below, because without JavaScript the
+ * button could do nothing — the page is complete without it.
+ */
+interface Props {
+  /** The post's slug, the key the post is saved under. */
+  slug: string;
+  /**
+   * What the confirmation toast calls it — "Recipe" on a recipe, "Note" on a
+   * field note. Read off this element by `SaveToast`, so the store never has to
+   * know what kind of post a slug belongs to.
+   */
+  kind?: string;
+  /**
+   * `quiet`  an inline control, for the article hero
+   * `button` an outlined button, for the end of an article
+   */
+  variant?: "quiet" | "button";
+  /** Set when the control sits on a photograph rather than on the page. */
+  onImage?: boolean;
+  class?: string;
+}
+
+const {
+  slug,
+  kind = "Post",
+  variant = "quiet",
+  onImage = false,
+  class: className = "",
+} = Astro.props;
+const labels =
+  variant === "button" ? { save: "Save for later", saved: "Saved" } : { save: "Save", saved: "Saved" };
+---
+
+<SavedRuntime />
+
+<button
+  type="button"
+  class:list={[
+    variant === "button" ? "btn btn--line" : "save-inline",
+    onImage && "save-inline--onImage",
+    className,
+  ]}
+  aria-pressed="false"
+  data-save-toggle={slug}
+  data-save-kind={kind}
+  data-label-save={labels.save}
+  data-label-saved={labels.saved}
+  hidden
+>
+  <Icon name="bookmark" class="save-mark" size={14} />
+  <span data-save-label>{labels.save}</span>
+</button>
+
+<script is:inline>
+  (() => {
+    if (window.supperSaveWired) return;
+    window.supperSaveWired = true;
+
+    const buttons = () => document.querySelectorAll("[data-save-toggle]");
+
+    const paint = (button) => {
+      const saved = window.supperSaved.has(button.dataset.saveToggle);
+      button.hidden = false;
+      button.setAttribute("aria-pressed", String(saved));
+      button.classList.toggle("is-saved", saved);
+      const label = button.querySelector("[data-save-label]");
+      if (label) label.textContent = saved ? button.dataset.labelSaved : button.dataset.labelSave;
+    };
+
+    /* Painted on DOM ready rather than here, so one copy of this script also
+       reveals save buttons rendered after it in the document. */
+    const init = () => buttons().forEach(paint);
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
+
+    document.addEventListener("click", (event) => {
+      const target = event.target instanceof Element && event.target.closest("[data-save-toggle]");
+      if (!target) return;
+      window.supperSaved.toggle(target.dataset.saveToggle);
+      buttons().forEach(paint);
+    });
+  })();
+</script>
+
+<style>
+  .save-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.22s ease;
+  }
+
+  .save-inline:hover,
+  .save-inline.is-saved {
+    color: var(--accent);
+  }
+
+  .save-inline--onImage {
+    color: rgb(255 255 255 / 0.78);
+  }
+
+  .save-inline--onImage:hover,
+  .save-inline--onImage.is-saved {
+    color: #fff;
+  }
+
+  /* The mark fills in when the story is saved — the state is legible without
+     reading the label. Icon renders the svg, so it needs :global. */
+  .is-saved :global(.save-mark) {
+    fill: currentColor;
+  }
+</style>

@@ -1,0 +1,310 @@
+---
+import Icon from "@/components/ui/Icon.astro";
+import { difficulties } from "@/config/recipe";
+import { categories, categorySlug, type Category } from "@/lib/posts";
+
+/**
+ * One Filters button under the page header, and the dialog it opens: section,
+ * time, and effort as three dropdowns, each labelled by nothing but its own
+ * first option.
+ *
+ * Time and effort filter the whole archive, not the entries on the current
+ * page: the script reads the same `/search-index.json` the search surfaces
+ * use, hides the server-rendered list and its pagination, and paints every
+ * match as a row. Their state lives in the query string, so a filtered view
+ * can be shared and survives the back button. Section is a place rather than a
+ * filter — choosing another one goes to that section's page and carries the
+ * other two along. Without JavaScript the button does nothing and the list
+ * stands as rendered.
+ */
+interface Props {
+  /** The section this page shows. Omit on the archive. */
+  category?: Category;
+  /** False on a section with no recipes, where time and effort would filter nothing. */
+  recipes?: boolean;
+  class?: string;
+}
+
+const { category, recipes = true, class: className = "" } = Astro.props;
+
+const sections = [
+  { value: "", label: "Every section", href: "/posts/" },
+  ...categories.map((c) => ({ value: c, label: c, href: `/category/${categorySlug(c)}/` })),
+];
+
+const times = [
+  { value: "", label: "Any time" },
+  { value: "under-30", label: "Under 30 minutes" },
+  { value: "30-60", label: "30 to 60 minutes" },
+  { value: "over-60", label: "Over an hour" },
+];
+
+const efforts = [
+  { value: "", label: "Any effort" },
+  ...difficulties.map((d) => ({ value: d, label: d })),
+];
+---
+
+<div class:list={["filters", className]} data-archive-filters data-category={category ?? ""}>
+  <div class="filters__row">
+    <button
+      type="button"
+      class="btn btn--line filters__open"
+      aria-haspopup="dialog"
+      aria-controls="archive-filters"
+      data-filter-open
+    >
+      <Icon name="sliders" size={16} />
+      Filters
+      <span class="filters__count" data-filter-count hidden></span>
+    </button>
+    <p class="txt-s txt-dim filters__summary" data-filter-summary aria-live="polite" hidden></p>
+    <button type="button" class="filters__clear" data-filter-clear hidden>Clear</button>
+  </div>
+
+  <dialog
+    id="archive-filters"
+    class="filters-dialog"
+    aria-labelledby="archive-filters-title"
+    data-filter-dialog
+  >
+    <form method="dialog" class="filters-dialog__panel" data-filter-form>
+      <div class="filters-dialog__head">
+        <h2 id="archive-filters-title" class="txt-h4">Filter the archive</h2>
+        <button type="button" class="icon-btn" aria-label="Close filters" data-filter-close>
+          <Icon name="close" size={18} />
+        </button>
+      </div>
+
+      <div class="filters-dialog__fields">
+        <label class="sr-only" for="filter-section">Section</label>
+        <span class="filters__select">
+          <select id="filter-section" data-filter="section">
+            {
+              sections.map((option) => (
+                <option
+                  value={option.value}
+                  data-href={option.href}
+                  selected={option.value === (category ?? "")}
+                >
+                  {option.label}
+                </option>
+              ))
+            }
+          </select>
+        </span>
+
+        {
+          recipes && (
+            <>
+              <label class="sr-only" for="filter-time">
+                Time
+              </label>
+              <span class="filters__select">
+                <select id="filter-time" data-filter="time">
+                  {times.map((option) => <option value={option.value}>{option.label}</option>)}
+                </select>
+              </span>
+
+              <label class="sr-only" for="filter-effort">
+                Effort
+              </label>
+              <span class="filters__select">
+                <select id="filter-effort" data-filter="effort">
+                  {efforts.map((option) => <option value={option.value}>{option.label}</option>)}
+                </select>
+              </span>
+            </>
+          )
+        }
+      </div>
+
+      <div class="filters-dialog__foot">
+        <button type="button" class="filters__clear" data-filter-reset>Reset</button>
+        <button type="submit" class="btn" data-filter-apply>Show everything</button>
+      </div>
+    </form>
+  </dialog>
+</div>
+
+<script is:inline>
+  /* The controls sit above the list in the page, so the list has not been
+     parsed yet when this script runs. Wait for the document to finish. */
+  const initArchiveFilters = () => {
+    const root = document.querySelector("[data-archive-filters]");
+    const list = document.querySelector("[data-archive-list]");
+    const pagination = document.querySelector("[data-archive-pagination]");
+    const results = document.querySelector("[data-filter-results]");
+    if (!root || !list || !results || !window.supperSearch) return;
+
+    const dialog = root.querySelector("[data-filter-dialog]");
+    const form = root.querySelector("[data-filter-form]");
+    const open = root.querySelector("[data-filter-open]");
+    const count = root.querySelector("[data-filter-count]");
+    const summary = root.querySelector("[data-filter-summary]");
+    const clear = root.querySelector("[data-filter-clear]");
+    const reset = root.querySelector("[data-filter-reset]");
+    const apply = root.querySelector("[data-filter-apply]");
+    const section = root.querySelector('[data-filter="section"]');
+    const facets = Array.from(root.querySelectorAll('[data-filter="time"], [data-filter="effort"]'));
+    const category = root.dataset.category || "";
+    const { load, rowMarkup } = window.supperSearch;
+    if (!dialog || !form || !open || !section || typeof dialog.showModal !== "function") return;
+
+    const buckets = {
+      "under-30": (m) => m <= 30,
+      "30-60": (m) => m > 30 && m <= 60,
+      "over-60": (m) => m > 60,
+    };
+    const timeWords = {
+      "under-30": "under thirty minutes",
+      "30-60": "in thirty to sixty minutes",
+      "over-60": "over an hour",
+    };
+
+    /* The URL is the state for time and effort; the section is the page. */
+    const params = new URLSearchParams(window.location.search);
+    const applied = {};
+    facets.forEach((select) => {
+      const value = params.get(select.dataset.filter) || "";
+      applied[select.dataset.filter] = [...select.options].some((option) => option.value === value)
+        ? value
+        : "";
+    });
+
+    const isRecipe = (item) => typeof item.minutes === "number";
+
+    const matching = async (chosenSection, current) =>
+      (await load()).filter(
+        (item) =>
+          (!chosenSection || item.category === chosenSection) &&
+          (!current.time || (isRecipe(item) && buckets[current.time](item.minutes))) &&
+          (!current.effort || item.difficulty === current.effort),
+      );
+
+    /* Time and effort only ever match recipes, so the count says so. */
+    const noun = (n, current) => {
+      const word = current.time || current.effort ? "recipe" : "post";
+      return `${n} ${word}${n === 1 ? "" : "s"}`;
+    };
+
+    const describe = (n, current) => {
+      const parts = [noun(n, current)];
+      if (category) parts.push(`in ${category}`);
+      if (current.time) parts.push(timeWords[current.time]);
+      if (current.effort) parts.push(`rated ${current.effort.toLowerCase()}`);
+      return parts.join(" ");
+    };
+
+    const render = async () => {
+      const chosen = Object.values(applied).filter(Boolean);
+      const active = chosen.length > 0;
+
+      const url = new URL(window.location.href);
+      Object.entries(applied).forEach(([key, value]) => {
+        if (value) url.searchParams.set(key, value);
+        else url.searchParams.delete(key);
+      });
+      window.history.replaceState(null, "", url);
+
+      if (count) {
+        count.hidden = !active;
+        count.textContent = String(chosen.length);
+      }
+      list.hidden = active;
+      if (pagination) pagination.hidden = active;
+      results.hidden = !active;
+      if (summary) summary.hidden = !active;
+      if (clear) clear.hidden = !active;
+
+      if (!active) {
+        results.innerHTML = "";
+        return;
+      }
+
+      const matches = await matching(category, applied);
+      if (summary) summary.textContent = describe(matches.length, applied);
+      results.innerHTML = matches.length
+        ? matches.map(rowMarkup).join("")
+        : `<p class="txt-m txt-dim filters__empty">Nothing matches that. Loosen one of the filters.</p>`;
+    };
+
+    const draft = () =>
+      Object.fromEntries(facets.map((select) => [select.dataset.filter, select.value]));
+
+    /* The button counts what the current picks would show, before they apply. */
+    const preview = async () => {
+      if (!apply) return;
+      const current = draft();
+      const n = (await matching(section.value, current)).length;
+      apply.textContent = `Show ${noun(n, current)}`;
+    };
+
+    const openDialog = () => {
+      section.value = category;
+      facets.forEach((select) => {
+        select.value = applied[select.dataset.filter];
+      });
+      void preview();
+      document.documentElement.classList.add("has-open-filters");
+      dialog.showModal();
+    };
+
+    open.addEventListener("click", openDialog);
+    root.querySelector("[data-filter-close]")?.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+    dialog.addEventListener("close", () => {
+      document.documentElement.classList.remove("has-open-filters");
+      open.focus();
+    });
+
+    [section, ...facets].forEach((select) =>
+      select.addEventListener("change", () => void preview()),
+    );
+
+    reset?.addEventListener("click", () => {
+      section.value = category;
+      facets.forEach((select) => {
+        select.value = "";
+      });
+      void preview();
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const current = draft();
+
+      // Another section is another page. Take the other two picks along.
+      if (section.value !== category) {
+        const href = section.selectedOptions[0]?.dataset.href || "/posts/";
+        const url = new URL(href, window.location.origin);
+        Object.entries(current).forEach(([key, value]) => {
+          if (value) url.searchParams.set(key, value);
+        });
+        window.location.assign(url);
+        return;
+      }
+
+      Object.assign(applied, current);
+      dialog.close();
+      void render();
+    });
+
+    clear?.addEventListener("click", () => {
+      Object.keys(applied).forEach((key) => {
+        applied[key] = "";
+      });
+      void render();
+    });
+
+    void render();
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initArchiveFilters);
+  } else {
+    initArchiveFilters();
+  }
+</script>

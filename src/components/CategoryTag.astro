@@ -1,0 +1,29 @@
+---
+import { categorySlug, type Category } from "@/lib/posts";
+
+/**
+ * The section tag. Every section gets the same pale red chip — the label does
+ * the telling, not the colour.
+ */
+interface Props {
+  category: Category;
+  /** `glass` sits on cover imagery; `solid` on the page ground. */
+  variant?: "solid" | "glass";
+  linked?: boolean;
+  class?: string;
+}
+
+const { category, variant = "solid", linked = true, class: className = "" } = Astro.props;
+const classes = ["tag", variant === "glass" && "tag--glass", className];
+const href = `/category/${categorySlug(category)}/`;
+---
+
+{
+  linked ? (
+    <a class:list={classes} href={href}>
+      {category}
+    </a>
+  ) : (
+    <span class:list={classes}>{category}</span>
+  )
+}

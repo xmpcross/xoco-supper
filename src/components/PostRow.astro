@@ -1,0 +1,67 @@
+---
+import { Image } from "astro:assets";
+import CookTime from "@/components/ui/CookTime.astro";
+import { postHref, type Post } from "@/lib/posts";
+import { postMinutes } from "@/lib/recipes";
+
+/**
+ * One entry of an archive: the type on the left — section, cook time,
+ * headline, standfirst — and the cover large on the right. Two
+ * of these sit side by side on a desktop, so a page of twelve reads as six
+ * rows of pictures rather than a ledger.
+ *
+ * The whole entry is one link rather than a headline link plus an overlay, so
+ * there is a single tab stop per story and no nested interactive elements.
+ * That is also why the section reads as a plain label here and not as the
+ * linked tag it is on a card.
+ */
+interface Props {
+  post: Post;
+  showExcerpt?: boolean;
+  /** Off on the front page, where the date column is enough. */
+  showThumb?: boolean;
+  eager?: boolean;
+  headingLevel?: "h2" | "h3";
+  class?: string;
+}
+
+const {
+  post,
+  showExcerpt = true,
+  showThumb = true,
+  eager = false,
+  headingLevel = "h3",
+  class: className = "",
+} = Astro.props;
+
+const data = post.data;
+const Heading = headingLevel;
+/* Only a recipe has one, so every other row is untouched. */
+const minutes = postMinutes(post);
+---
+
+<a class:list={["row", !showThumb && "row--flush", className]} href={postHref(post)}>
+  <div class="row__body">
+    <div class="row__head">
+      <span class="tag">{data.category}</span>
+      {minutes !== undefined && <CookTime minutes={minutes} />}
+    </div>
+    <Heading class="txt-h3 row__title">{data.title}</Heading>
+    {showExcerpt && <p class="txt-s txt-dim row__excerpt line-clamp-2">{data.excerpt}</p>}
+  </div>
+
+  {
+    showThumb && (
+      <div class="row__media">
+        <Image
+          src={data.cover.src}
+          alt=""
+          widths={[360, 540, 720, 960]}
+          sizes="(min-width: 64rem) 20vw, (min-width: 40rem) 36vw, 40vw"
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+        />
+      </div>
+    )
+  }
+</a>

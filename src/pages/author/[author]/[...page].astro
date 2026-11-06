@@ -1,0 +1,129 @@
+---
+import { getCollection } from "astro:content";
+import type { GetStaticPaths, Page } from "astro";
+import FeedLink from "@/components/FeedLink.astro";
+import Pagination from "@/components/Pagination.astro";
+import PostCard from "@/components/PostCard.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import Avatar from "@/components/ui/Avatar.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { authorBio } from "@/config/authors";
+import { siteConfig } from "@/config/site";
+import { getAllAuthors, visiblePosts, type Post } from "@/lib/posts";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const allPosts = visiblePosts(await getCollection("posts"));
+
+  return getAllAuthors(allPosts).flatMap((author) =>
+    paginate(author.posts, {
+      pageSize: 12,
+      params: { author: author.slug },
+      props: { author, allPosts },
+    }),
+  );
+}) satisfies GetStaticPaths;
+
+interface Props {
+  author: { slug: string; name: string; role: string; posts: Post[] };
+  allPosts: Post[];
+  page: Page<Post>;
+}
+
+const { author, allPosts, page } = Astro.props;
+const latest = author.posts[0];
+const bio = authorBio(author.name);
+const feedHref = `/author/${author.slug}/rss.xml`;
+const title = page.currentPage === 1 ? author.name : `${author.name} - Page ${page.currentPage}`;
+const description = `Stories by ${author.name}, ${author.role}, on ${siteConfig.name}.`;
+/* Their latest cover rather than their portrait: a share card is a letterbox,
+   and cropping a headshot to 1.91:1 takes a slice out of a face. */
+const socialImage = latest?.data.cover.src;
+const withTrailingSlash = (url: string | undefined) => (url && !url.endsWith("/") ? `${url}/` : url);
+const prevUrl = withTrailingSlash(page.url.prev);
+const nextUrl = withTrailingSlash(page.url.next);
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  image={socialImage}
+  imageAlt={latest?.data.cover.alt}
+  prevUrl={prevUrl}
+  nextUrl={nextUrl}
+  feed={{ href: feedHref, title: `${author.name} - ${siteConfig.name}` }}
+>
+  <SiteHeader posts={allPosts} />
+  <main id="content">
+    <div class="container">
+      <header class="author-hero">
+        <Avatar name={author.name} size="xl" />
+        <div class="author-hero__body">
+          <p class="label author-hero__eyebrow">Contributor</p>
+          <h1 class="txt-h1">{author.name}</h1>
+          <p class="txt-l txt-dim">{author.role}</p>
+          {bio && <p class="txt-m txt-dim author-hero__bio">{bio}</p>}
+          <div class="author-hero__facts">
+            <p class="label txt-dim">
+              {page.total} {page.total === 1 ? "recipe" : "recipes"}
+              {page.lastPage > 1 && <> &nbsp;/&nbsp; Page {page.currentPage} of {page.lastPage}</>}
+            </p>
+            <FeedLink href={feedHref} label={`Follow ${author.name}`} />
+          </div>
+        </div>
+      </header>
+    </div>
+
+    <section class="container section section-tight" aria-label={`Stories by ${author.name}`}>
+      <div class="grid-tall">
+        {
+          page.data.map((post, index) => (
+            <PostCard post={post} headingLevel="h2" eager={index < 4} />
+          ))
+        }
+      </div>
+
+      <Pagination
+        prevUrl={prevUrl}
+        nextUrl={nextUrl}
+        currentPage={page.currentPage}
+        lastPage={page.lastPage}
+        label={`${author.name} pagination`}
+      />
+    </section>
+  </main>
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .author-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-block: clamp(2.5rem, 6vw, 4.5rem) 2rem;
+  }
+
+  .author-hero__body {
+    display: grid;
+    gap: 0.75rem;
+    justify-items: start;
+    min-width: 0;
+  }
+
+  .author-hero__bio {
+    max-width: 60ch;
+  }
+
+  .author-hero__eyebrow {
+    color: var(--accent);
+  }
+
+  .author-hero__facts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+  }
+</style>

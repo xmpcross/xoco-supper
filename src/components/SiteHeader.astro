@@ -1,0 +1,568 @@
+---
+import { Image } from "astro:assets";
+import SaveToast from "@/components/SaveToast.astro";
+import SavedRuntime from "@/components/SavedRuntime.astro";
+import SearchRuntime from "@/components/SearchRuntime.astro";
+import SiteDrawer from "@/components/SiteDrawer.astro";
+import Icon from "@/components/ui/Icon.astro";
+import { categoryMeta, recipeCategories } from "@/config/categories";
+import { primaryNavigation, recipesPanelLinks, siteConfig } from "@/config/site";
+import { categorySlug, getByCategory, visiblePosts, type Post } from "@/lib/posts";
+import { onlyRecipes } from "@/lib/recipes";
+
+/**
+ * The masthead: three links on the left, the wordmark in the centre, and
+ * Search, Saved, and Menu on the right. Recipes hangs the cooking sections off
+ * itself as a full-width panel, each on the cover of its newest recipe. On a
+ * phone the links go and the bar is the wordmark and three icons; every other
+ * route lives in the drawer that opens from the Menu control.
+ */
+interface Props {
+  posts: Post[];
+}
+
+const allPosts = visiblePosts(Astro.props.posts);
+const currentPath = Astro.url.pathname;
+const isCurrent = (href: string) => (href === "/" ? currentPath === "/" : currentPath.startsWith(href));
+
+/*
+ * The recipes panel. Each cooking section shows the cover of its newest recipe,
+ * so the panel is a picture of what the site is cooking rather than a list of
+ * names, and no set of section artwork has to be kept in step. A section with
+ * nothing published is left out; the reading section has its own link in the bar.
+ */
+const megaSections = recipeCategories
+  .map((category) => {
+    const published = getByCategory(allPosts, category);
+    return {
+      category,
+      href: `/category/${categorySlug(category)}/`,
+      blurb: categoryMeta[category].blurb,
+      count: published.length,
+      cover: published[0]?.data.cover,
+    };
+  })
+  .filter((section) => section.cover);
+const recipeCount = onlyRecipes(allPosts).length;
+
+/* The Recipes item is current on the archive and on any cooking section. */
+const isCurrentItem = (item: (typeof primaryNavigation)[number]) =>
+  isCurrent(item.href) ||
+  (item.mega === true && megaSections.some((section) => isCurrent(section.href)));
+---
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <nav class="site-nav" aria-label="Primary">
+      {
+        primaryNavigation.map((item) =>
+          item.mega && megaSections.length > 0 ? (
+            /* A link rather than a button, so the item still goes somewhere
+               with scripting off. The script opens the panel on hover and
+               focus; on a touch screen the first tap opens it, the second
+               follows the link. */
+            <a
+              class="site-nav__link site-nav__link--mega"
+              href={item.href}
+              aria-current={isCurrentItem(item) ? "page" : undefined}
+              aria-expanded="false"
+              aria-controls="mega-recipes"
+              data-mega-toggle
+            >
+              {item.label}
+              <Icon name="chevron-down" size={14} class="site-nav__caret" />
+            </a>
+          ) : (
+            <a
+              class="site-nav__link"
+              href={item.href}
+              aria-current={isCurrentItem(item) ? "page" : undefined}
+            >
+              {item.label}
+            </a>
+          ),
+        )
+      }
+    </nav>
+
+    <a href="/" class="wordmark" aria-label={`${siteConfig.name} home`}>
+      {siteConfig.name}
+    </a>
+
+    <div class="header-actions">
+      <button
+        type="button"
+        class="header-action"
+        aria-label="Search recipes"
+        aria-haspopup="dialog"
+        aria-controls="site-search-dialog"
+        data-search-toggle
+      >
+        <Icon name="search" size={17} />
+        <span class="header-action__label">Search</span>
+      </button>
+
+      {/* A link, not a control, so it works with JavaScript off — the page it
+          points at is the one that needs the script, and it says so itself.
+          The dot is painted by the runtime once the list is non-empty. */}
+      <a class="header-action header-saved" href="/saved/" aria-label="Saved recipes">
+        <Icon name="bookmark" size={17} />
+        <span class="header-action__label">Saved</span>
+        <span class="header-saved__dot" data-saved-dot hidden></span>
+      </a>
+
+      <button
+        type="button"
+        class="header-action menu-button"
+        aria-label="Open site menu"
+        aria-controls="site-drawer"
+        aria-expanded="false"
+        data-drawer-open
+      >
+        <Icon name="menu" size={18} />
+        <span class="header-action__label">Menu</span>
+      </button>
+    </div>
+  </div>
+
+  {
+    megaSections.length > 0 && (
+      <div class="mega" id="mega-recipes" data-mega>
+        <div class="container mega__inner">
+          <div class="mega__lead">
+            <p class="label txt-dim">Browse</p>
+            <ul class="mega__links">
+              {recipesPanelLinks.map((item, index) => (
+                <li>
+                  <a
+                    class:list={["mega__link", index === 0 && "mega__link--all"]}
+                    href={item.href}
+                  >
+                    {item.label}
+                    {index === 0 && <Icon name="arrow-right" size={14} />}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p class="txt-s txt-dim mega__note">
+              {recipeCount} {recipeCount === 1 ? "recipe" : "recipes"} across{" "}
+              {megaSections.length} sections, and the writing in between under Field Notes.
+            </p>
+          </div>
+
+          <ul class="mega__grid">
+            {megaSections.map((section) => (
+              <li>
+                <a
+                  class="mega__tile"
+                  href={section.href}
+                  aria-current={isCurrent(section.href) ? "page" : undefined}
+                >
+                  <span class="mega__media">
+                    <Image
+                      src={section.cover!.src}
+                      alt=""
+                      widths={[320, 480, 640]}
+                      sizes="(min-width: 84rem) 14vw, 24vw"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </span>
+                  <span class="mega__name">
+                    {section.category}
+                    <Icon name="arrow-right" size={14} />
+                  </span>
+                  <span class="txt-xs txt-dim mega__blurb">{section.blurb}</span>
+                  <span class="label txt-dim">
+                    {section.count} {section.count === 1 ? "recipe" : "recipes"}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    )
+  }
+</header>
+
+<dialog
+  id="site-search-dialog"
+  class="search-dialog"
+  aria-labelledby="site-search-title"
+  aria-describedby="site-search-description"
+  data-search-dialog
+>
+  <div class="search-command">
+    <form action="/search/" method="get" role="search" aria-label="Site search" data-search-form>
+      <div class="search-command-field">
+        <Icon name="search" size={20} class="search-command-icon" />
+        <div class="min-w-0 flex-1">
+          <h2 id="site-search-title" class="sr-only">Search {siteConfig.name}</h2>
+          <label class="sr-only" for="site-search-input">Search recipes</label>
+          <input
+            id="site-search-input"
+            name="q"
+            type="search"
+            class="search-command-input"
+            placeholder="Search recipes, ingredients, sections…"
+            autocomplete="off"
+            enterkeyhint="search"
+            data-search-input
+          />
+        </div>
+        <button type="button" class="icon-btn" aria-label="Close search" data-search-close>
+          <Icon name="close" size={18} />
+        </button>
+      </div>
+
+      <div class="search-command-body">
+        <div class="search-command-heading">
+          <p class="label txt-dim" data-search-heading />
+          <p
+            id="site-search-description"
+            class="txt-xs txt-dim"
+            data-search-summary
+            aria-live="polite"
+          >
+            Start typing to search the archive.
+          </p>
+        </div>
+        <div class="search-command-results" data-search-results></div>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+
+<SiteDrawer posts={allPosts} />
+
+<SearchRuntime posts={allPosts} />
+
+<SavedRuntime />
+
+<SaveToast />
+
+<script is:inline>
+  (() => {
+    const dot = document.querySelector("[data-saved-dot]");
+    if (!dot) return;
+
+    /* A dot rather than a number: the header is four controls wide on a phone,
+       and "how many" is a question the /saved/ page answers. */
+    const paint = () => {
+      dot.hidden = window.supperSaved.list().length === 0;
+    };
+
+    paint();
+    document.addEventListener("supper:saved-change", paint);
+  })();
+</script>
+
+<script is:inline>
+  (() => {
+  const searchDialog = document.querySelector("[data-search-dialog]");
+  const searchToggles = document.querySelectorAll("[data-search-toggle]");
+  const searchClose = searchDialog?.querySelector("[data-search-close]");
+  const searchInput = searchDialog?.querySelector("[data-search-input]");
+  const searchResults = searchDialog?.querySelector("[data-search-results]");
+  const searchHeading = searchDialog?.querySelector("[data-search-heading]");
+  const searchSummary = searchDialog?.querySelector("[data-search-summary]");
+  const { load, search, escapeHtml, timeMarkup } = window.supperSearch;
+  let searchOpener;
+
+  const searchResultMarkup = (item) => `
+    <a href="${escapeHtml(item.href)}" class="search-result">
+      <span class="search-result-copy">
+        <span class="search-result-title">${escapeHtml(item.title)}</span>
+        <span class="search-result-meta">
+          <span>${escapeHtml(item.category)}</span>
+          ${timeMarkup(item.minutes)}
+        </span>
+      </span>
+      <svg aria-hidden="true" class="search-result-arrow" viewBox="0 0 24 24" fill="none">
+        <path d="M5 12h14m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </a>
+  `;
+
+  const renderSearchResults = async () => {
+    if (!searchInput || !searchResults || !searchHeading || !searchSummary) return;
+
+    const rawQuery = searchInput.value.trim();
+    const query = rawQuery.toLowerCase();
+
+    // Nothing typed yet is not a browse surface: the palette stays empty until
+    // there is a query, so opening it never dumps a list nobody asked for.
+    if (!query) {
+      const items = await load();
+      searchHeading.textContent = "";
+      searchSummary.textContent = `Search ${items.length} stories by title, section, tag, or contributor.`;
+      searchResults.innerHTML = "";
+      return;
+    }
+
+    const matches = (await search(query)).slice(0, 7);
+
+    // A slower query that resolved after a faster one must not overwrite it.
+    if (searchInput.value.trim().toLowerCase() !== query) return;
+
+    searchHeading.textContent = "Search results";
+    searchSummary.textContent = `${matches.length} ${matches.length === 1 ? "result" : "results"} for “${rawQuery}”.`;
+
+    if (matches.length === 0) {
+      searchResults.innerHTML = `
+        <div class="search-empty">
+          <span class="search-empty-icon" aria-hidden="true">?</span>
+          <div>
+            <p class="txt-h5">No articles found</p>
+            <p class="txt-xs txt-dim">Try a title, topic, tag, or author.</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    searchResults.innerHTML = matches.map(searchResultMarkup).join("");
+  };
+
+  const openSearch = () => {
+    if (!searchDialog || !searchInput || typeof searchDialog.showModal !== "function") return;
+    if (!searchDialog.open) searchDialog.showModal();
+    document.documentElement.classList.add("has-open-search");
+    void renderSearchResults();
+    window.requestAnimationFrame(() => searchInput.focus());
+  };
+
+  const closeSearch = () => {
+    if (searchDialog?.open) searchDialog.close();
+  };
+
+  searchToggles.forEach((toggle) => {
+    toggle.addEventListener("click", (event) => {
+      if (!searchDialog || typeof searchDialog.showModal !== "function") return;
+      event.preventDefault();
+      searchOpener = toggle;
+      // Synchronous, so the drawer has released inert before showModal runs.
+      document.dispatchEvent(new CustomEvent("supper:drawer-close"));
+      openSearch();
+    });
+  });
+
+  searchClose?.addEventListener("click", closeSearch);
+
+  searchDialog?.addEventListener("close", () => {
+    document.documentElement.classList.remove("has-open-search");
+    searchOpener?.focus();
+  });
+
+  searchDialog?.addEventListener("click", (event) => {
+    if (event.target === searchDialog) closeSearch();
+  });
+
+  searchInput?.addEventListener("input", () => {
+    void renderSearchResults();
+  });
+
+  // The dialog is still arrow-navigable; it just no longer says so on screen.
+  searchInput?.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowDown") return;
+    const firstResult = searchResults?.querySelector("a");
+    if (!firstResult) return;
+    event.preventDefault();
+    firstResult.focus();
+  });
+
+  searchResults?.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+
+    const links = Array.from(searchResults.querySelectorAll("a"));
+    const currentIndex = links.indexOf(document.activeElement);
+    if (currentIndex === -1) return;
+
+    event.preventDefault();
+    if (event.key === "ArrowDown") {
+      (links[currentIndex + 1] || links[0])?.focus();
+    } else if (currentIndex === 0) {
+      searchInput?.focus();
+    } else {
+      links[currentIndex - 1]?.focus();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    const target = event.target;
+    const isEditing =
+      target instanceof HTMLElement &&
+      (target.matches("input, textarea, select") || target.isContentEditable);
+    const isCommandShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
+    const isSlashShortcut = event.key === "/" && !isEditing && !event.metaKey && !event.ctrlKey && !event.altKey;
+
+    if (!isCommandShortcut && !isSlashShortcut) return;
+    event.preventDefault();
+
+    if (searchDialog?.open && isCommandShortcut) closeSearch();
+    else openSearch();
+  });
+
+  const siteHeader = document.querySelector(".site-header");
+
+  // The recipes panel. Opened by one class on the bar rather than by a hover
+  // chain, so crossing the gap between the item and the panel cannot close it.
+  // It leaves on a short timer that anything re-entering cancels.
+  const megaToggle = siteHeader?.querySelector("[data-mega-toggle]");
+  const mega = siteHeader?.querySelector("[data-mega]");
+
+  if (siteHeader && megaToggle && mega) {
+    const wideBar = window.matchMedia("(min-width: 64rem)");
+    let closeTimer;
+    let lastPointerType = "mouse";
+
+    const isMegaOpen = () => siteHeader.classList.contains("is-mega-open");
+
+    const setMega = (open) => {
+      window.clearTimeout(closeTimer);
+      siteHeader.classList.toggle("is-mega-open", open);
+      megaToggle.setAttribute("aria-expanded", String(open));
+    };
+
+    const openMega = () => {
+      if (wideBar.matches) setMega(true);
+    };
+    const closeMega = () => setMega(false);
+
+    const scheduleClose = () => {
+      window.clearTimeout(closeTimer);
+      closeTimer = window.setTimeout(closeMega, 240);
+    };
+
+    [megaToggle, mega].forEach((element) => {
+      element.addEventListener("pointerenter", (event) => {
+        if (event.pointerType === "touch") return;
+        openMega();
+      });
+      element.addEventListener("pointerleave", (event) => {
+        if (event.pointerType === "touch") return;
+        scheduleClose();
+      });
+    });
+
+    megaToggle.addEventListener("pointerdown", (event) => {
+      lastPointerType = event.pointerType;
+    });
+
+    // No hover on a touch screen, so the first tap opens the panel and the
+    // second follows the link.
+    megaToggle.addEventListener("click", (event) => {
+      if (lastPointerType !== "touch" || !wideBar.matches || isMegaOpen()) return;
+      event.preventDefault();
+      openMega();
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "touch" || !isMegaOpen()) return;
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (megaToggle.contains(target) || mega.contains(target)) return;
+      closeMega();
+    });
+
+    megaToggle.addEventListener("focus", openMega);
+
+    // Tabbing out of the pair closes it; tabbing between them does not.
+    document.addEventListener("focusin", (event) => {
+      if (!isMegaOpen()) return;
+      const target = event.target;
+      if (target === megaToggle || (target instanceof Node && mega.contains(target))) return;
+      closeMega();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !isMegaOpen()) return;
+      closeMega();
+      megaToggle.focus();
+    });
+
+    // Scrolling is a decision to read the page, not the menu.
+    window.addEventListener("scroll", closeMega, { passive: true });
+    wideBar.addEventListener("change", () => {
+      if (!wideBar.matches) closeMega();
+    });
+  }
+
+  // An overlay page lifts the header onto the artwork, where it is absolutely
+  // positioned and scrolls away with the photograph. Scrolling up anywhere
+  // summons it back as a solid fixed bar (`is-floating`) — the same hide/reveal
+  // every other page gets — and it lies back onto the photograph once the
+  // reader returns to the top.
+  const overlayHeader = document.body.classList.contains("has-overlay-header");
+
+  if (siteHeader) {
+    let scrollTicking = false;
+    let lastScrollY = window.scrollY;
+    let floating = false;
+
+    const updateHeaderVisibility = () => {
+      const currentScrollY = window.scrollY;
+
+      if (!overlayHeader) {
+        if (currentScrollY <= 8) {
+          siteHeader.classList.remove("is-hidden");
+        } else if (currentScrollY > lastScrollY) {
+          siteHeader.classList.add("is-hidden");
+        } else if (currentScrollY < lastScrollY) {
+          siteHeader.classList.remove("is-hidden");
+        }
+      } else if (currentScrollY <= 8) {
+        floating = false;
+        siteHeader.classList.remove("is-floating", "is-hidden");
+      } else if (currentScrollY < lastScrollY) {
+        if (!floating) {
+          floating = true;
+          // Land hidden first, so the bar slides in rather than popping.
+          siteHeader.classList.add("is-floating", "is-hidden");
+          void siteHeader.getBoundingClientRect();
+        }
+        siteHeader.classList.remove("is-hidden");
+      } else if (floating && currentScrollY > lastScrollY) {
+        siteHeader.classList.add("is-hidden");
+      }
+
+      lastScrollY = currentScrollY;
+      scrollTicking = false;
+    };
+
+    updateHeaderVisibility();
+
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (scrollTicking) return;
+        scrollTicking = true;
+        window.requestAnimationFrame(updateHeaderVisibility);
+      },
+      { passive: true },
+    );
+  }
+  })();
+</script>
+
+<style>
+  /* Sits on the corner of the bookmark rather than beside it, so the control
+     stays one target and the bar does not change width when the first recipe
+     is saved. */
+  .header-saved__dot {
+    position: absolute;
+    top: 0.45rem;
+    left: 1.35rem;
+    width: 0.4rem;
+    height: 0.4rem;
+    border: 1.5px solid var(--background);
+    border-radius: var(--r-full);
+    background: var(--accent-strong);
+  }
+
+  .menu-button {
+    margin-right: -0.6rem;
+  }
+</style>

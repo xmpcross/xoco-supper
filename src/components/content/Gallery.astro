@@ -1,0 +1,192 @@
+---
+import { Image, getImage } from "astro:assets";
+import Icon from "@/components/ui/Icon.astro";
+import type { ImageMetadata } from "astro";
+
+/**
+ * A set of images inside an article. The shape adapts to how many there are:
+ * two or three sit still and share the row, four or more become a slider,
+ * because past three the tiles get too small to be worth looking at.
+ *
+ * Captions belong to individual images and show only in the lightbox — printing
+ * them under the tiles turns a picture set into a wall of small grey type and
+ * forces the tiles to different heights.
+ */
+export interface GalleryImage {
+  src: ImageMetadata;
+  alt: string;
+  caption?: string;
+  credit?: string;
+}
+
+interface Props {
+  images: GalleryImage[];
+  /** Lightbox group name. Set it if a page carries two independent galleries. */
+  group?: string;
+  /** Accessible name for the set. Not printed. */
+  label?: string;
+}
+
+const { images, group = "gallery", label = "Image gallery" } = Astro.props;
+
+/* Full-size renditions for the lightbox, resolved at build time so a click
+   costs one request and no client-side work. */
+const full = await Promise.all(
+  images.map((image) =>
+    getImage({ src: image.src, width: Math.min(image.src.width, 2400), format: "webp" }),
+  ),
+);
+
+/*
+ * Four is the threshold. Up to three the set fits the article track at a size
+ * worth looking at; beyond that a static row would shrink every tile to fit the
+ * count, so the row scrolls instead and holds the tiles at a readable width.
+ */
+const slides = images.length >= 4;
+const columns = Math.min(images.length, 3);
+---
+
+<div
+  class:list={["gallery", slides && "gallery--slides"]}
+  style={`--gallery-cols:${columns}`}
+  data-gallery
+>
+  <div class="gallery__rail" role="group" aria-label={label} data-gallery-rail>
+    {
+      images.map((image, index) => (
+        <button
+          class="gallery__item"
+          type="button"
+          data-lightbox
+          data-lightbox-group={group}
+          data-lightbox-src={full[index].src}
+          data-lightbox-alt={image.alt}
+          data-lightbox-caption={image.caption ?? ""}
+          data-lightbox-credit={image.credit ?? ""}
+          aria-label={`Enlarge image ${index + 1} of ${images.length}: ${image.alt}`}
+        >
+          <Image
+            src={image.src}
+            alt={image.alt}
+            widths={[480, 720, 960, 1280]}
+            sizes="(min-width: 64rem) 40vw, (min-width: 40rem) 46vw, 86vw"
+            loading="lazy"
+            decoding="async"
+          />
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    /* Pointer affordances only. Touch swipes the rail natively, so these are
+       hidden below the breakpoint rather than shrunk to fit a thumb. */
+    slides && (
+      <>
+        <button
+          type="button"
+          class="gallery__nav gallery__nav--prev"
+          data-gallery-prev
+          aria-label="Previous images"
+        >
+          <Icon name="arrow-left" size={18} />
+        </button>
+        <button
+          type="button"
+          class="gallery__nav gallery__nav--next"
+          data-gallery-next
+          aria-label="Next images"
+        >
+          <Icon name="arrow-right" size={18} />
+        </button>
+      </>
+    )
+  }
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-gallery]").forEach((root) => {
+    const rail = root.querySelector<HTMLElement>("[data-gallery-rail]");
+    if (!rail) return;
+
+    const prev = root.querySelector<HTMLButtonElement>("[data-gallery-prev]");
+    const next = root.querySelector<HTMLButtonElement>("[data-gallery-next]");
+    if (!prev || !next) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const update = () => {
+      const max = rail.scrollWidth - rail.clientWidth;
+      /* Nothing to scroll means nothing to steer. */
+      const idle = max < 8;
+      prev.hidden = idle;
+      next.hidden = idle;
+      prev.disabled = rail.scrollLeft <= 4;
+      next.disabled = rail.scrollLeft >= max - 4;
+    };
+
+    /* One tile plus its gap, measured rather than assumed, so the step stays
+       right across the breakpoints that change how many are visible. */
+    const step = () => {
+      const tile = rail.querySelector<HTMLElement>(":scope > *");
+      if (!tile) return rail.clientWidth * 0.8;
+      const gap = parseFloat(getComputedStyle(rail).columnGap) || 0;
+      return tile.getBoundingClientRect().width + gap;
+    };
+
+    const go = (direction: number) => {
+      rail.scrollBy({ left: direction * step(), behavior: reduced.matches ? "auto" : "smooth" });
+    };
+
+    prev.addEventListener("click", () => go(-1));
+    next.addEventListener("click", () => go(1));
+    rail.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    update();
+
+    /* Click-and-drag with a mouse; touch already swipes natively. A drag that
+       ends on a tile must not also open the lightbox. */
+    let startX = 0;
+    let startScroll = 0;
+    let dragging = false;
+    let moved = false;
+
+    rail.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "mouse" || event.button !== 0) return;
+      dragging = true;
+      moved = false;
+      startX = event.clientX;
+      startScroll = rail.scrollLeft;
+      rail.classList.add("is-dragging");
+      /* Keeps the native image drag from hijacking the gesture. */
+      event.preventDefault();
+    });
+
+    rail.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      const delta = event.clientX - startX;
+      if (Math.abs(delta) > 4) moved = true;
+      rail.scrollLeft = startScroll - delta;
+    });
+
+    const endDrag = () => {
+      dragging = false;
+      rail.classList.remove("is-dragging");
+    };
+
+    rail.addEventListener("pointerup", endDrag);
+    rail.addEventListener("pointercancel", endDrag);
+    rail.addEventListener("pointerleave", endDrag);
+
+    rail.addEventListener(
+      "click",
+      (event) => {
+        if (!moved) return;
+        moved = false;
+        event.preventDefault();
+        event.stopPropagation();
+      },
+      { capture: true },
+    );
+  });
+</script>

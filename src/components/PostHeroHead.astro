@@ -1,0 +1,75 @@
+---
+import CategoryTag from "@/components/CategoryTag.astro";
+import PrintButton from "@/components/PrintButton.astro";
+import SaveButton from "@/components/SaveButton.astro";
+import ShareButton from "@/components/ShareButton.astro";
+import Byline from "@/components/ui/Byline.astro";
+import Icon from "@/components/ui/Icon.astro";
+import CookTime from "@/components/ui/CookTime.astro";
+import { formatDate, postSlug, type Post } from "@/lib/posts";
+import { isRecipe } from "@/lib/recipes";
+import { postMinutes } from "@/lib/recipes";
+
+/**
+ * The title block every article opening shares. Only its colour, scale, and
+ * alignment change between layouts, so the tag, the byline, and the read time
+ * never move to a different place from one story to the next. Anything passed
+ * to the default slot — the photo credit, on the two openings that sit on the
+ * picture — joins the block as its last line and its last staggered entrance.
+ */
+interface Props {
+  post: Post;
+  /** Set when the block sits on a photograph rather than on the page. */
+  onImage?: boolean;
+  /** Display-scale headline. Used by the immersive opening. */
+  display?: boolean;
+  /** Centres the block, tag through byline. Used by the immersive opening. */
+  center?: boolean;
+}
+
+const { post, onImage = false, display = false, center = false } = Astro.props;
+const data = post.data;
+/* A recipe states its cook time where the section tag is, the same as it does
+   on every card that links here. The panel below carries the ingredients and
+   the method; this is only the number arriving with the headline. */
+const minutes = postMinutes(post);
+---
+
+<div
+  class:list={[
+    "posthero__head",
+    "opener",
+    onImage && "posthero__head--onImage",
+    center && "posthero__head--center",
+  ]}
+>
+  <div class="chip-row">
+    <CategoryTag category={data.category} variant={onImage ? "glass" : "solid"} />
+    {minutes !== undefined && <CookTime minutes={minutes} size="md" onImage={onImage} />}
+  </div>
+
+  <h1 class:list={[display ? "txt-d" : "txt-h1"]}>{data.title}</h1>
+  <p class:list={["txt-l", !onImage && "txt-dim", "posthero__standfirst"]}>{data.excerpt}</p>
+
+  <div class:list={["meta", "meta--inline", onImage && "meta--onDark", "posthero__byline"]}>
+    <Byline post={post} onImage={onImage} prefix size="md" />
+
+    <span class="meta__rule posthero__bylineRule" aria-hidden="true"></span>
+
+    <span class="posthero__facts">
+      <span class="meta__fact">
+        <Icon name="calendar" size={14} />
+        <time datetime={data.date.toISOString()}>{formatDate(data.date, "long")}</time>
+      </span>
+    </span>
+  </div>
+
+  {/* On their own line under the meta: these are actions, not more facts. */}
+  <div class="posthero__share posthero__actions">
+    <ShareButton onImage={onImage} />
+    <SaveButton slug={postSlug(post)} kind={isRecipe(post) ? "Recipe" : "Note"} onImage={onImage} />
+    <PrintButton onImage={onImage} />
+  </div>
+
+  <slot />
+</div>

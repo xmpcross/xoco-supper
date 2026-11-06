@@ -1,0 +1,42 @@
+---
+import Icon from "@/components/ui/Icon.astro";
+import { formatMinutes } from "@/config/recipe";
+
+/**
+ * The one number a recipe card carries: hands-on plus oven time, with a clock.
+ * It sits exactly where a rating would on a review site, and for the same
+ * reason — it is the fact that decides whether the reader clicks.
+ *
+ * Resting is not in it. See `activeMinutes` in `src/lib/recipes.ts`.
+ */
+interface Props {
+  minutes: number;
+  size?: "sm" | "md";
+  /** Set when the badge sits on a photograph rather than on the page. */
+  onImage?: boolean;
+  /** A line of metadata rather than a filled chip. */
+  plain?: boolean;
+  class?: string;
+}
+
+const {
+  minutes,
+  size = "sm",
+  onImage = false,
+  plain = false,
+  class: className = "",
+} = Astro.props;
+---
+
+<span
+  class:list={[
+    "cook-time",
+    size === "md" && "cook-time--md",
+    onImage && "cook-time--onImage",
+    plain && "cook-time--plain",
+    className,
+  ]}
+>
+  <Icon name="clock" size={size === "md" ? 14 : 12} />
+  <span class="nums">{formatMinutes(minutes)}</span>
+</span>

@@ -1,0 +1,206 @@
+---
+import LocalIcon from "@/components/LocalIcon.astro";
+import SubscribeForm from "@/components/SubscribeForm.astro";
+import SwapText from "@/components/ui/SwapText.astro";
+import { footerNavigation, siteConfig } from "@/config/site";
+import { socialIconFor } from "@/lib/socials";
+
+/**
+ * The colophon. A double rule, then the wordmark and tagline centred like the
+ * last page of a cookbook, then the link columns with the signup taking the
+ * last and widest one, then the legal line. The signup lives here rather than
+ * as a slab above the footer, so a page ends once rather than twice.
+ */
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="site-footer" data-site-footer>
+  <div class="container site-footer__inner">
+    <div class="site-footer__masthead">
+      <a href="/" class="wordmark site-footer__wordmark" aria-label={`${siteConfig.name} home`}>
+        {siteConfig.name}
+      </a>
+      <p class="site-footer__tagline">{siteConfig.tagline}</p>
+      <p class="txt-s txt-dim site-footer__bio">{siteConfig.bio}</p>
+      <ul class="site-footer__socials hover-fade-group">
+        {
+          siteConfig.socials.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="icon-btn icon-btn--line"
+                aria-label={item.label}
+                rel={item.href.startsWith("http") ? "noreferrer" : undefined}
+              >
+                <LocalIcon name={socialIconFor(item.label)} className="h-4 w-4" />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="site-footer__columns">
+      <nav class="site-footer__nav" aria-label="Footer">
+        {
+          footerNavigation.map((group) => (
+            <div class="site-footer__group">
+              <p class="label txt-dim">{group.title}</p>
+              <ul class="hover-fade-group">
+                {group.links.map((link) => (
+                  <li>
+                    <a class="txt-s site-footer__link" href={link.href}>
+                      <SwapText text={link.label} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </nav>
+
+      <div class="site-footer__signup" id="newsletter" aria-labelledby="footer-newsletter-title">
+        <p class="label txt-dim" id="footer-newsletter-title">Newsletter</p>
+        <p class="site-footer__signupTitle">{siteConfig.newsletter.title}</p>
+        <p class="txt-xs txt-dim">{siteConfig.newsletter.description}</p>
+        <SubscribeForm id="footer-newsletter-email" showTerms={false} />
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <p class="txt-xs txt-dim">&copy; {currentYear} {siteConfig.name}</p>
+      <p class="txt-xs txt-dim">Built with Astro</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 3px double var(--border-strong);
+    background: var(--wash);
+  }
+
+  .site-footer__inner {
+    display: grid;
+    gap: 2.5rem;
+    padding-block: clamp(2.5rem, 5vw, 4rem) 1.5rem;
+  }
+
+  .site-footer__masthead {
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border-strong);
+    padding-bottom: 2.25rem;
+    text-align: center;
+  }
+
+  .site-footer__wordmark {
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+    line-height: 1;
+  }
+
+  .site-footer__tagline {
+    margin: 0;
+    color: var(--muted-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--fs-l);
+    font-style: italic;
+  }
+
+  .site-footer__bio {
+    max-width: 52ch;
+  }
+
+  .site-footer__socials,
+  .site-footer__nav ul {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer__socials {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .site-footer__columns {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .site-footer__nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.5rem 1.5rem;
+  }
+
+  .site-footer__group {
+    display: grid;
+    align-content: start;
+    gap: 0.9rem;
+  }
+
+  .site-footer__nav ul {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .site-footer__link {
+    color: var(--foreground);
+    font-weight: 500;
+    transition: color 0.25s ease;
+  }
+
+  .site-footer__link:hover {
+    color: var(--accent);
+  }
+
+  .site-footer__signup {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+  }
+
+  .site-footer__signupTitle {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: var(--weight-title);
+    letter-spacing: var(--ls-title);
+    line-height: var(--lh-title);
+  }
+
+  .site-footer__signup :global(form) {
+    margin-top: 0.4rem;
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    border-top: 1px solid var(--border-strong);
+    padding-top: 1.25rem;
+  }
+
+  @media (min-width: 48rem) {
+    .site-footer__nav {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* The signup column is wider than a link column because it holds a field and
+     a button, and it wraps badly at link-column width. */
+  @media (min-width: 64rem) {
+    .site-footer__columns {
+      grid-template-columns: minmax(0, 2fr) minmax(20rem, 1fr);
+      gap: 4rem;
+    }
+  }
+</style>

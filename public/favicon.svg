@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Supper">
+  <rect width="32" height="32" rx="4" fill="#073921" />
+  <text
+    x="16"
+    y="23.5"
+    text-anchor="middle"
+    font-family="Young Serif, Georgia, 'Times New Roman', serif"
+    font-size="23"
+    font-weight="400"
+    fill="#f9f7f5"
+  >S</text>
+</svg>

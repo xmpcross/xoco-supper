@@ -1,0 +1,183 @@
+---
+import { getCollection } from "astro:content";
+import PostRow from "@/components/PostRow.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import Icon from "@/components/ui/Icon.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { siteConfig } from "@/config/site";
+import { visiblePosts } from "@/lib/posts";
+
+const allPosts = visiblePosts(await getCollection("posts"));
+/** How many recipes the page shows before anyone has typed anything. */
+const restingCount = 8;
+/*
+ * The resting list is real server-rendered markup rather than something the
+ * script paints on arrival: the page is useful with JavaScript off, there is no
+ * empty flash on load, and the thumbnails go through the image pipeline. The
+ * script snapshots this markup and puts it back when the field is cleared, and
+ * only fetches `/search-index.json` once someone actually types.
+ */
+const resting = allPosts.slice(0, restingCount);
+---
+
+<BaseLayout
+  title="Search"
+  description={`Search ${siteConfig.name} by recipe, ingredient, section, or tag.`}
+  noindex
+>
+  <SiteHeader posts={allPosts} />
+  <main id="content">
+    <div class="container search-page">
+      {/* No page header and no chrome: the field is the page. */}
+      <form
+        class="search-page-form opener"
+        role="search"
+        aria-label="Recipe search"
+        action="/search/"
+        method="get"
+      >
+        <label class="sr-only" for="search-page-input">Search recipes</label>
+        <div class="field search-page-field">
+          <Icon name="search" class="search-page-icon" size={20} />
+          <input
+            id="search-page-input"
+            class="field__input"
+            name="q"
+            type="search"
+            placeholder="Search recipes, ingredients, sections, tags…"
+            autocomplete="off"
+            autofocus
+            data-search-page-input
+          />
+        </div>
+      </form>
+
+      <section class="section" aria-labelledby="search-page-heading">
+        <div class="search-page-head">
+          <h1 class="txt-h4" id="search-page-heading" data-search-page-heading>Latest articles</h1>
+          <p class="txt-s txt-dim" data-search-page-summary aria-live="polite">
+            Showing {resting.length} of {allPosts.length} posts
+          </p>
+        </div>
+        <div class="index-list search-page-results" data-search-page-results>
+          {
+            resting.map((post) => (
+              <PostRow post={post} headingLevel="h2" />
+            ))
+          }
+        </div>
+      </section>
+    </div>
+  </main>
+  <SiteFooter />
+
+  <script is:inline define:vars={{ restingCount, totalCount: allPosts.length }}>
+    (() => {
+      const input = document.querySelector("[data-search-page-input]");
+      const results = document.querySelector("[data-search-page-results]");
+      const summary = document.querySelector("[data-search-page-summary]");
+      const heading = document.querySelector("[data-search-page-heading]");
+      if (!input || !results || !summary || !heading) return;
+
+      /* `rowMarkup` paints the same entry `PostRow` renders on the server. */
+      const { search, rowMarkup } = window.supperSearch;
+      /* The server-rendered resting list, kept so clearing the field restores
+         it verbatim rather than re-rendering an approximation of it. */
+      const restingMarkup = results.innerHTML;
+
+      const showResting = () => {
+        heading.textContent = "Latest articles";
+        summary.textContent = `Showing ${Math.min(restingCount, totalCount)} of ${totalCount} posts`;
+        results.innerHTML = restingMarkup;
+      };
+
+      const render = async () => {
+        const rawQuery = input.value.trim();
+
+        // Nothing typed is not an empty state: the archive is the default view,
+        // newest first, so the page is useful before anyone searches it.
+        if (!rawQuery) {
+          showResting();
+          return;
+        }
+
+        const matches = await search(rawQuery);
+
+        // A slower query that resolved after a faster one must not overwrite it.
+        if (input.value.trim() !== rawQuery) return;
+
+        heading.textContent = "Results";
+        summary.textContent = `${matches.length} ${matches.length === 1 ? "result" : "results"} for “${rawQuery}”`;
+        results.innerHTML = matches.length
+          ? matches.map(rowMarkup).join("")
+          : `<p class="txt-m txt-dim search-page-empty">No recipes match that. Try a dish, an ingredient, a section, or a tag.</p>`;
+      };
+
+      const params = new URLSearchParams(window.location.search);
+      input.value = params.get("q") || "";
+      if (input.value.trim()) void render();
+      input.addEventListener("input", () => void render());
+    })();
+  </script>
+
+  <style>
+    .search-page {
+      padding-top: clamp(2rem, 6vw, 4rem);
+      padding-bottom: var(--section-gap);
+    }
+
+    .search-page-form {
+      width: 100%;
+      max-width: 40rem;
+    }
+
+    .search-page-field {
+      height: 3.75rem;
+      gap: 0.85rem;
+      padding-right: 1.25rem;
+      padding-left: 1.25rem;
+    }
+
+    /* `:global` is required: Icon renders the svg, so it never receives this
+       page's scoping attribute. */
+    .search-page-field :global(.search-page-icon) {
+      flex-shrink: 0;
+      color: var(--muted-foreground);
+    }
+
+    .search-page-field :global(.field__input) {
+      font-size: var(--fs-l);
+    }
+
+    .search-page-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem 1.5rem;
+      margin-top: clamp(2rem, 5vw, 3rem);
+      margin-bottom: 1rem;
+    }
+
+    /* The one ledger with no page header above it, so it draws its own rule —
+       and drops it again when there is nothing to separate. */
+    .search-page-results {
+      border-top: 1px solid var(--border);
+    }
+
+    .search-page-results:empty {
+      border-top: 0;
+    }
+
+    /* PostRow scopes this to itself, and the rows the script builds carry no
+       scoping attribute — so the two lists would sit differently without it. */
+    .search-page-results :global(.row__byline) {
+      margin-top: 0.15rem;
+    }
+
+    .search-page-empty {
+      padding-block: 2.5rem;
+    }
+  </style>
+</BaseLayout>

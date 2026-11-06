@@ -1,0 +1,77 @@
+---
+import { getCollection } from "astro:content";
+import type { GetStaticPaths, Page } from "astro";
+import PageHeader from "@/components/PageHeader.astro";
+import Pagination from "@/components/Pagination.astro";
+import PostRow from "@/components/PostRow.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { siteConfig } from "@/config/site";
+import { getAllTags, tagSlug, visiblePosts, type Post } from "@/lib/posts";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const allPosts = visiblePosts(await getCollection("posts"));
+
+  return getAllTags(allPosts).flatMap((tag) => {
+    const slug = tagSlug(tag);
+    const posts = allPosts.filter((post) => post.data.tags.some((item) => tagSlug(item) === slug));
+
+    return paginate(posts, { pageSize: 12, params: { tag: slug }, props: { tag, allPosts } });
+  });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  tag: string;
+  allPosts: Post[];
+  page: Page<Post>;
+}
+
+const { tag, allPosts, page } = Astro.props;
+const title = page.currentPage === 1 ? tag : `${tag} - Page ${page.currentPage}`;
+const description = `Stories tagged ${tag} on ${siteConfig.name}.`;
+const meta = [
+  `${page.total} ${page.total === 1 ? "post" : "posts"}`,
+  page.lastPage > 1 ? `Page ${page.currentPage} of ${page.lastPage}` : null,
+]
+  .filter(Boolean)
+  .join(" · ");
+const withTrailingSlash = (url: string | undefined) => (url && !url.endsWith("/") ? `${url}/` : url);
+const prevUrl = withTrailingSlash(page.url.prev);
+const nextUrl = withTrailingSlash(page.url.next);
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  image={page.data[0]?.data.cover.src}
+  imageAlt={page.data[0]?.data.cover.alt}
+  prevUrl={prevUrl}
+  nextUrl={nextUrl}
+>
+  <SiteHeader posts={allPosts} />
+  <main id="content">
+    <div class="container">
+      <PageHeader eyebrow="Tag" title={tag} meta={meta} />
+    </div>
+
+    <section class="container section section-tight" aria-label={`Stories tagged ${tag}`}>
+      <div class="index-list">
+        {
+          page.data.map((post, index) => (
+            <PostRow post={post} headingLevel="h2" eager={index < 3} />
+          ))
+        }
+      </div>
+
+      <Pagination
+        prevUrl={prevUrl}
+        nextUrl={nextUrl}
+        currentPage={page.currentPage}
+        lastPage={page.lastPage}
+        label={`${tag} pagination`}
+      />
+    </section>
+  </main>
+  <SiteFooter />
+</BaseLayout>

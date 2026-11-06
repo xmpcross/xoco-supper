@@ -1,0 +1,43 @@
+---
+import CookTime from "@/components/ui/CookTime.astro";
+import { postHref, type Post } from "@/lib/posts";
+import { postMinutes } from "@/lib/recipes";
+
+/** Numbered chart. The rank comes from a CSS counter, so nothing to maintain. */
+interface Props {
+  posts: Post[];
+  class?: string;
+}
+
+const { posts, class: className = "" } = Astro.props;
+---
+
+{
+  posts.length > 0 && (
+    <ol class:list={["chart", className]}>
+      {posts.map((post) => {
+        /* Only a recipe has one, so every other entry is untouched. */
+        const minutes = postMinutes(post);
+
+        return (
+          <li class="chart__item">
+            <a class="chart__link" href={postHref(post)}>
+              <span class="chart__body">
+                <span class="txt-h4">{post.data.title}</span>
+                <span class="txt-xs txt-dim meta__facts--ruled">
+                  {post.data.category}
+                  {minutes !== undefined && (
+                    <>
+                      <span class="meta__rule" aria-hidden="true" />
+                      <CookTime minutes={minutes} />
+                    </>
+                  )}
+                </span>
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ol>
+  )
+}

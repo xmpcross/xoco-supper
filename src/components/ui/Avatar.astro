@@ -1,0 +1,42 @@
+---
+import { getImage } from "astro:assets";
+import { authorPortrait } from "@/config/authors";
+import { authorInitials } from "@/lib/posts";
+
+interface Props {
+  name: string;
+  size?: "sm" | "md" | "lg" | "xl";
+  onDark?: boolean;
+  class?: string;
+}
+
+const { name, size = "sm", onDark = false, class: className = "" } = Astro.props;
+
+/** Falls back to a monogram when the name has no portrait configured. */
+const portrait = authorPortrait(name);
+const pixels = { sm: 22, md: 36, lg: 52, xl: 72 }[size];
+
+/**
+ * Portraits render as a background image rather than an `<img>`. They are
+ * decorative (the byline text next to them carries the name), never larger than
+ * 72px, and the same handful of files is reused across every page — so there is
+ * no responsive sizing to do and nothing worth deferring. Going through
+ * `getImage()` keeps them in Astro's optimisation pipeline.
+ */
+const rendered = portrait
+  ? await getImage({
+      src: portrait.image,
+      width: pixels * 2,
+      height: pixels * 2,
+      format: "webp",
+    })
+  : null;
+---
+
+<span
+  class:list={["avatar", `avatar--${size}`, onDark && "avatar--onDark", className]}
+  aria-hidden="true"
+  style={rendered ? `background-image:url("${rendered.src}")` : undefined}
+>
+  {!rendered && authorInitials(name)}
+</span>

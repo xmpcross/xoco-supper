@@ -1,0 +1,14 @@
+---
+/**
+ * Label that slides its duplicate up on hover of the nearest link or button.
+ * The duplicate is drawn by CSS from `data-swap`, so no extra DOM per label.
+ */
+interface Props {
+  text: string;
+  class?: string;
+}
+
+const { text, class: className = "" } = Astro.props;
+---
+
+<span class:list={["swap", className]} data-swap={text}><span>{text}</span></span>

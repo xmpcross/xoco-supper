@@ -1,0 +1,55 @@
+---
+import CategoryTag from "@/components/CategoryTag.astro";
+import CookTime from "@/components/ui/CookTime.astro";
+import { postHref, type Post } from "@/lib/posts";
+import { postMinutes } from "@/lib/recipes";
+
+/**
+ * Stories with no pictures at all. It is the block that shows the archive runs
+ * deeper than the photographs around it, and it sets up the picture grid that
+ * follows by giving the eye a rest.
+ *
+ * `columns` runs them side by side under a full-width heading. `stack` runs
+ * them down one narrow track, ruled between rather than beside — which is the
+ * only thing that works in the ledger aside, where four columns of headline in
+ * 26rem is four columns of one word.
+ */
+interface Props {
+  posts: Post[];
+  variant?: "columns" | "stack";
+  headingLevel?: "h3" | "h4";
+  class?: string;
+}
+
+const {
+  posts,
+  variant = "columns",
+  headingLevel = "h3",
+  class: className = "",
+} = Astro.props;
+const Heading = headingLevel;
+---
+
+{
+  posts.length > 0 && (
+    <div class:list={["trend-grid", variant === "stack" && "trend-grid--stack", className]}>
+      {posts.map((post) => {
+        /* Only a recipe has one, so every other column is untouched. */
+        const minutes = postMinutes(post);
+
+        return (
+          <article class="trend">
+            <div class="chip-row">
+              <CategoryTag category={post.data.category} />
+              {minutes !== undefined && <CookTime minutes={minutes} />}
+            </div>
+            <a class="hit" href={postHref(post)} aria-label={post.data.title} />
+            <Heading class:list={[headingLevel === "h4" ? "txt-h4" : "txt-h3", "trend__title"]}>
+              {post.data.title}
+            </Heading>
+          </article>
+        );
+      })}
+    </div>
+  )
+}

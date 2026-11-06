@@ -1,0 +1,57 @@
+---
+import { siteConfig } from "@/config/site";
+
+interface Props {
+  id: string;
+  showTerms?: boolean;
+  class?: string;
+}
+
+const { id, showTerms = true, class: className = "" } = Astro.props;
+
+const newsletter = siteConfig.newsletter;
+const action = newsletter.action.trim();
+const isConfigured = newsletter.enabled && action.length > 0;
+const method = newsletter.method || "post";
+const emailFieldName = newsletter.emailFieldName || "email";
+const noteId = `${id}-note`;
+---
+
+<form
+  class:list={["subscribe-form", className]}
+  action={isConfigured ? action : undefined}
+  method={method}
+  aria-describedby={noteId}
+>
+  <div class="field">
+    <label class="sr-only" for={id}>Email address</label>
+    <input
+      id={id}
+      class="field__input"
+      type="email"
+      name={emailFieldName}
+      autocomplete="email"
+      placeholder="you@example.com"
+      required
+      disabled={!isConfigured}
+    />
+    <button type="submit" class="btn" disabled={!isConfigured}>
+      {isConfigured ? "Subscribe" : "Soon"}
+    </button>
+  </div>
+  <p id={noteId} class:list={["form-note", !showTerms && "sr-only"]}>
+    {
+      isConfigured
+        ? newsletter.terms
+        : "Newsletter signup is disabled until a provider is configured."
+    }
+  </p>
+</form>
+
+<style>
+  .subscribe-form {
+    display: grid;
+    gap: 0.625rem;
+    width: 100%;
+  }
+</style>

@@ -1,0 +1,117 @@
+---
+title: "The Tomato Salad That Needs Nothing Else"
+excerpt: "Good tomatoes, salt, and twenty minutes of doing nothing. Every other ingredient on the list is optional and most of them are a mistake."
+category: "Greens"
+date: 2026-08-28
+author:
+  name: "Delphine Roy"
+  role: "Cook & photographer"
+cover:
+  src: "./cover.jpg"
+  alt: "Sliced tomatoes and mozzarella fanned across an oval plate, dressed with basil and balsamic"
+  creditName: "Brelyn Bashrum"
+  creditUrl: "https://unsplash.com/photos/caprese-salad-with-tomatoes-mozzarella-and-basil-UPLohuQZEZQ"
+keyIngredients:
+  - "tomatoes"
+  - "flaky salt"
+  - "olive oil"
+tags:
+  - "no cook"
+  - "summer"
+  - "five ingredients"
+trending: true
+recipe:
+  servings: 4
+  yields: "One large platter, as a side"
+  prepMinutes: 10
+  cookMinutes: 0
+  restMinutes: 20
+  restNote: "Twenty minutes on the counter while the salt draws the juice out."
+  difficulty: "Easy"
+  ingredients:
+    - items:
+        - { quantity: 900, unit: "g", item: "ripe tomatoes", note: "mixed sizes and colours" }
+        - { item: "flaky salt", note: "more than feels correct" }
+        - { quantity: 3, unit: "tbsp", item: "good olive oil" }
+        - {
+            quantity: 1,
+            unit: "tsp",
+            item: "red wine vinegar",
+            note: "optional, and only if the tomatoes are dull",
+          }
+        - { item: "torn basil" }
+        - { item: "coarsely cracked black pepper" }
+  steps:
+    - heading: "Cut them properly"
+      body: "Slice the large tomatoes thick, halve the small ones, and leave the tiny ones whole. Uneven pieces are the point: they hold the dressing differently and the plate tastes like more than one thing."
+    - heading: "Salt, then wait"
+      body: "Lay everything on a platter in one layer and salt it heavily. Leave it for twenty minutes. The salt pulls juice to the surface, and that juice — thinned with the oil — is the whole dressing."
+    - heading: "Dress at the table"
+      body: "Pour the oil over, add the vinegar only if the tomatoes need help, and tear the basil on top. Crack pepper over it and take it straight out. Do not toss it; do not refrigerate it."
+  notes:
+    - "Cold kills tomato flavour. If yours have been in the fridge, cut them an hour before and let them come all the way back to room temperature."
+    - "The juice in the bottom of the platter is the best thing on the table. Put bread next to it."
+  keeps: "It does not. Eat it the day it is made."
+---
+
+import Figure from "@/components/content/Figure.astro";
+import Gallery from "@/components/content/Gallery.astro";
+import inline from "./inline.jpg";
+import g1 from "./g1.jpg";
+import g2 from "./g2.jpg";
+import g3 from "./g3.jpg";
+import g4 from "./g4.jpg";
+
+There is a version of this salad on every restaurant menu between June and September, and most of them have too much in them. Shallots, capers, a mustard vinaigrette, a hard cheese — each one is defensible on its own and together they bury the thing you paid for.
+
+A tomato at the height of its season is already sweet, already acidic, and already savoury. What it wants is salt, fat, and time. Everything else is a hedge against tomatoes that are not very good, and the honest answer in that case is to cook them instead.
+
+<Figure
+  src={inline}
+  alt="Heirloom tomatoes in a blue bowl on a weathered wooden table"
+  caption="Mixed sizes and colours, and none of them refrigerated. This is the entire shopping list."
+  credit="Richard Heinen"
+  wide
+/>
+
+## Why the waiting matters
+
+Salt does not season the surface of a tomato so much as it opens it. Twenty minutes after salting, there is a slick of pink juice on the platter that was not there before, and it is more concentrated than anything you could have made in a bowl. Pour the oil in and it emulsifies on contact.
+
+This is also why the salad is assembled on the plate it is served from. Tossed in a bowl, the juice stays in the bowl.
+
+## What to put beside it
+
+Bread, torn not sliced. A hard-boiled egg if it is lunch. Cold white wine, or a beer, and nothing that needs a knife.
+
+If you want to make it a meal, [the focaccia](/post/no-knead-focaccia-with-too-much-olive-oil/) is the right bread, and you can tear it straight into the juice.
+
+<Gallery
+  label="The whole thing, in four stages"
+  images={[
+    {
+      src: g1,
+      alt: "A large pile of red, orange and green tomatoes",
+      caption: "Buy more kinds than you need. The plate tastes like more than one thing.",
+      credit: "Maddie Kuchenmeister",
+    },
+    {
+      src: g2,
+      alt: "Ripe tomatoes on a white ceramic plate",
+      caption: "One layer, salted heavily, and then twenty minutes of leaving it alone.",
+      credit: "Davies Designs Studio",
+    },
+    {
+      src: g3,
+      alt: "Olive oil being drizzled over a bowl of salad",
+      caption: "The oil goes on at the table, into the juice the salt has already drawn out.",
+      credit: "Janesca",
+    },
+    {
+      src: g4,
+      alt: "Thickly sliced tomatoes in a grey-green bowl",
+      caption: "Thick slices, torn basil, cracked pepper. Nothing else is missing.",
+      credit: "Ryan Quintal",
+    },
+  ]}
+/>

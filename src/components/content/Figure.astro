@@ -1,0 +1,60 @@
+---
+import { Image, getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+/**
+ * A single image inside an article, with an optional caption and a click-to-
+ * enlarge view. Used from `.mdx` posts; plain `.md` posts carry no components
+ * and are unaffected.
+ *
+ * `wide` breaks the image out of the reading column to the full article track,
+ * which is worth doing for landscape photography and never for a screenshot.
+ */
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  caption?: string;
+  credit?: string;
+  wide?: boolean;
+  /** Shares a lightbox group with a gallery, so arrows step between them. */
+  group?: string;
+}
+
+const { src, alt, caption, credit, wide = false, group = "figure" } = Astro.props;
+
+/* The lightbox shows a larger rendition than the page does, capped so a 6000px
+   original does not become a 6000px download on a click. */
+const full = await getImage({ src, width: Math.min(src.width, 2000), format: "webp" });
+---
+
+<figure class:list={["figure", wide && "figure--wide"]}>
+  <button
+    class="figure__btn"
+    type="button"
+    data-lightbox
+    data-lightbox-group={group}
+    data-lightbox-src={full.src}
+    data-lightbox-alt={alt}
+    data-lightbox-caption={caption ?? ""}
+    data-lightbox-credit={credit ?? ""}
+    aria-label={`Enlarge image: ${alt}`}
+  >
+    <Image
+      src={src}
+      alt={alt}
+      widths={[640, 960, 1280, 1600, 2000]}
+      sizes={wide ? "(min-width: 64rem) 92vw, 100vw" : "(min-width: 48rem) 704px, 100vw"}
+      loading="lazy"
+      decoding="async"
+    />
+  </button>
+
+  {
+    (caption || credit) && (
+      <figcaption class="figure__caption">
+        {caption}
+        {credit && <span class="figure__credit">{credit}</span>}
+      </figcaption>
+    )
+  }
+</figure>

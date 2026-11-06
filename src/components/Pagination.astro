@@ -1,0 +1,72 @@
+---
+import Icon from "@/components/ui/Icon.astro";
+import SwapText from "@/components/ui/SwapText.astro";
+
+interface Props {
+  prevUrl?: string;
+  nextUrl?: string;
+  currentPage: number;
+  lastPage: number;
+  label: string;
+}
+
+const { prevUrl, nextUrl, currentPage, lastPage, label } = Astro.props;
+---
+
+{
+  lastPage > 1 && (
+    <nav class="pagination" aria-label={label}>
+      {prevUrl ? (
+        <a class="btn btn--line" href={prevUrl} rel="prev">
+          <Icon name="arrow-left" size={12} />
+          <SwapText text="Previous" />
+        </a>
+      ) : (
+        <span class="btn btn--line" aria-disabled="true" data-disabled>
+          <Icon name="arrow-left" size={12} />
+          Previous
+        </span>
+      )}
+
+      <span class="label txt-dim">
+        {String(currentPage).padStart(2, "0")} / {String(lastPage).padStart(2, "0")}
+      </span>
+
+      {nextUrl ? (
+        <a class="btn btn--line" href={nextUrl} rel="next">
+          <SwapText text="Next" />
+          <Icon name="arrow-right" size={12} />
+        </a>
+      ) : (
+        <span class="btn btn--line" aria-disabled="true" data-disabled>
+          Next
+          <Icon name="arrow-right" size={12} />
+        </span>
+      )}
+    </nav>
+  )
+}
+
+<style>
+  .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1.75rem;
+    margin-top: 2.5rem;
+  }
+
+  .pagination [data-disabled] {
+    cursor: default;
+    opacity: 0.35;
+  }
+
+  .pagination [data-disabled]:hover {
+    border-color: var(--border-strong);
+    background: transparent;
+    color: var(--foreground);
+  }
+</style>

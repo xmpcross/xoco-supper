@@ -1,0 +1,110 @@
+---
+import Icon from "@/components/ui/Icon.astro";
+
+/**
+ * The confirmation that appears when a reader saves a post.
+ *
+ * It exists to say the one thing about this feature a reader cannot guess: the
+ * list lives in their browser. No account, no sync, and gone if they clear
+ * their site data — which is worth saying once, at the moment they first rely
+ * on it, rather than burying on the `/saved/` page they may never open.
+ *
+ * Rendered once per page next to `SavedRuntime`, and driven entirely by the
+ * `supper:saved-change` event, so it never has to know which control was
+ * pressed. It stays out of the way on `/saved/` itself: there, removing a row
+ * makes it disappear, and that is already the feedback.
+ */
+---
+
+<div class="toast" role="status" aria-live="polite" aria-atomic="true" data-save-toast hidden>
+  <div class="toast__body">
+    <p class="txt-h4 toast__title" data-toast-title></p>
+    <p class="txt-s toast__note" data-toast-note></p>
+  </div>
+  <a class="btn toast__action" href="/saved/" data-toast-action>
+    View saved recipes
+    <Icon name="bookmark" size={15} />
+  </a>
+</div>
+
+<script>
+  (() => {
+    const toast = document.querySelector<HTMLElement>("[data-save-toast]");
+    if (!toast) return;
+
+    /* On the saved list itself the row vanishing is the confirmation. */
+    if (location.pathname.replace(/\/$/, "") === "/saved") return;
+
+    const title = toast.querySelector<HTMLElement>("[data-toast-title]");
+    const note = toast.querySelector<HTMLElement>("[data-toast-note]");
+    const action = toast.querySelector<HTMLElement>("[data-toast-action]");
+    if (!title || !note || !action) return;
+
+    /** Long enough to read two lines and reach the button without hurrying. */
+    const LIFETIME = 7000;
+    let timer = 0;
+
+    const hide = () => {
+      window.clearTimeout(timer);
+      timer = 0;
+      toast.classList.remove("is-open");
+      /* Left in the flow until the exit finishes, so it animates out rather
+         than blinking away. `hidden` also takes it back out of the a11y tree. */
+      window.setTimeout(() => {
+        if (!toast.classList.contains("is-open")) toast.hidden = true;
+      }, 260);
+    };
+
+    const arm = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(hide, LIFETIME);
+    };
+
+    const show = (saved: boolean, kind: string, count: number) => {
+      if (saved) {
+        title.textContent = `${kind} saved!`;
+        note.textContent =
+          "Your saved collection is only visible on this browser. Clearing your browser or switching devices will remove saves.";
+      } else {
+        title.textContent = `${kind} removed.`;
+        note.textContent = "It is no longer in your saved collection.";
+      }
+
+      /* Nothing to view once the list is empty. The count comes off the event,
+         so the toast never has to reach for the store. */
+      action.hidden = count === 0;
+
+      toast.hidden = false;
+      /* One frame between unhiding and the class, or the transition has no
+         start value to animate from. */
+      window.requestAnimationFrame(() => toast.classList.add("is-open"));
+      arm();
+    };
+
+    document.addEventListener("supper:saved-change", (event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail || typeof detail.saved !== "boolean") return;
+
+      /*
+       * "Recipe" or "Note", read off the control that was pressed rather than
+       * passed through the event — the store deals in slugs and should not have
+       * to know what a post is. A removal from somewhere with no button on the
+       * page falls back to the neutral word.
+       */
+      const button = document.querySelector<HTMLElement>(
+        `[data-save-toggle="${CSS.escape(String(detail.slug))}"]`,
+      );
+      show(detail.saved, button?.dataset.saveKind || "Post", Number(detail.count) || 0);
+    });
+
+    /* A toast a reader is reaching for must not vanish under the cursor. */
+    toast.addEventListener("mouseenter", () => window.clearTimeout(timer));
+    toast.addEventListener("mouseleave", arm);
+    toast.addEventListener("focusin", () => window.clearTimeout(timer));
+    toast.addEventListener("focusout", arm);
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !toast.hidden) hide();
+    });
+  })();
+</script>

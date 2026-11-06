@@ -1,0 +1,353 @@
+---
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import NoteCard from "@/components/NoteCard.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import SectionHeader from "@/components/SectionHeader.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import Avatar from "@/components/ui/Avatar.astro";
+import Icon from "@/components/ui/Icon.astro";
+import SwapText from "@/components/ui/SwapText.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import theKitchen from "@/assets/images/about/the-kitchen.jpg";
+import { NOTES_CATEGORY } from "@/config/categories";
+import { siteConfig } from "@/config/site";
+import { authorBio } from "@/config/authors";
+import {
+  categories,
+  categorySlug,
+  formatDate,
+  getAllAuthors,
+  getByCategory,
+  visiblePosts,
+  type Category,
+} from "@/lib/posts";
+import { onlyRecipes } from "@/lib/recipes";
+
+const allPosts = visiblePosts(await getCollection("posts"));
+const recipes = onlyRecipes(allPosts);
+const authors = getAllAuthors(allPosts);
+/** Undefined when the configured byline has no published posts. */
+const cook = authors.find((author) => author.name === siteConfig.editor.name);
+/** The writing, as the way in for somebody new. */
+const notes = getByCategory(allPosts, NOTES_CATEGORY, 5);
+const notesBadge = (index: number) =>
+  ["Note", "Guide", "Kit", "Shopping", "Pantry"][index] ?? "Note";
+
+/*
+ * The cook's record, counted from the archive rather than typed: how many
+ * recipes, how many notes, since when, and the section most of the cooking
+ * falls in. It stays true as the site grows.
+ */
+const cookPosts = cook?.posts ?? [];
+const cookRecipes = onlyRecipes(cookPosts);
+const cookNotes = cookPosts.filter((post) => post.data.category === NOTES_CATEGORY);
+const firstPost = cookPosts.at(-1);
+const favouriteSection = cookRecipes
+  .reduce((tally, post) => {
+    tally.set(post.data.category, (tally.get(post.data.category) ?? 0) + 1);
+    return tally;
+  }, new Map<Category, number>())
+  .entries()
+  .reduce<[Category, number] | undefined>(
+    (best, entry) => (best && best[1] >= entry[1] ? best : entry),
+    undefined,
+  )?.[0];
+
+const principles = [
+  {
+    title: "Cooked more than once",
+    body: `Nothing is published here off the back of a single good evening. Every recipe on ${siteConfig.name} has been made at least three times, which is how long it takes to find out which step people actually skip.`,
+  },
+  {
+    title: "Say what the step is for",
+    body: "An instruction with no reason attached is one a cook will drop the moment they are in a hurry. If a recipe asks you to wait twenty minutes, it also has to say what happens in them.",
+  },
+  {
+    title: "Be honest about day three",
+    body: "Most recipe sites stop at the plate. Every recipe here says what it keeps like, what to do with the leftovers, and when the answer is that there is no keeping it.",
+  },
+];
+---
+
+<BaseLayout
+  title="About"
+  description={`About ${siteConfig.name}: what gets cooked here, how the recipes are written, and who writes them.`}
+  image={theKitchen}
+  imageAlt="A woman stirring an orange pot on the hob in a bright white kitchen"
+>
+  <SiteHeader posts={allPosts} />
+  <main id="content">
+    <div class="container">
+      <PageHeader
+        eyebrow="About"
+        title="Everything here has been cooked at least three times."
+        description={siteConfig.bio}
+        meta={`${recipes.length} recipes · ${allPosts.length} posts · ${categories.length} sections`}
+      />
+    </div>
+
+    <div class="container section section-top">
+      <figure class="about-figure">
+        <div class="media media--photo">
+          <Image
+            src={theKitchen}
+            alt="A woman stirring an orange pot on the hob in a bright white kitchen"
+            widths={[640, 960, 1280, 1600, 2000]}
+            sizes="100vw"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </div>
+        <figcaption class="txt-xs txt-dim about-figure__credit">
+          Photo credit:{" "}
+          <a
+            class="underline-hover"
+            href="https://unsplash.com/photos/woman-cooking-inside-kitchen-room-7MAjXGUmaPw"
+            rel="noreferrer">Jason Briscoe</a
+          >
+        </figcaption>
+      </figure>
+    </div>
+
+    {
+      cook && (
+        <section class="container section" aria-labelledby="about-cook">
+          <div class="about-cook">
+            <div class="about-cook__intro">
+              <Avatar name={cook.name} size="xl" class="about-cook__portrait" />
+              <div class="about-cook__name">
+                <p class="label about-cook__eyebrow">{siteConfig.editor.title}</p>
+                <h2 class="txt-h1" id="about-cook">
+                  {cook.name}
+                </h2>
+                <p class="label txt-dim">{cook.role}</p>
+              </div>
+            </div>
+
+            <div class="about-cook__body">
+              <p class="txt-l txt-dim about-cook__bio">
+                {siteConfig.editor.bio || authorBio(cook.name)}
+              </p>
+
+              <a class="section-link about-cook__link" href={`/author/${cook.slug}/`}>
+                <SwapText text={`Everything ${cook.name.split(" ")[0]} has cooked`} />
+                <Icon name="arrow-up-right" size={12} />
+              </a>
+            </div>
+
+            <div class="about-cook__record">
+              <dl class="about-cook__facts">
+                <div class="about-cook__fact">
+                  <dt class="label">Recipes</dt>
+                  <dd class="nums">{cookRecipes.length}</dd>
+                </div>
+                {cookNotes.length > 0 && (
+                  <div class="about-cook__fact">
+                    <dt class="label">{NOTES_CATEGORY}</dt>
+                    <dd class="nums">{cookNotes.length}</dd>
+                  </div>
+                )}
+                {firstPost && (
+                  <div class="about-cook__fact">
+                    <dt class="label">Cooking here since</dt>
+                    <dd>
+                      <time datetime={firstPost.data.date.toISOString()}>
+                        {formatDate(firstPost.data.date, "long")}
+                      </time>
+                    </dd>
+                  </div>
+                )}
+                {favouriteSection && (
+                  <div class="about-cook__fact">
+                    <dt class="label">Mostly</dt>
+                    <dd>{favouriteSection}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <section class="container section" aria-labelledby="about-principles">
+      <SectionHeader title="The house rules" id="about-principles" />
+      <div class="grid-columns" style="--cols:3">
+        {
+          principles.map((principle, index) => (
+            <div class="about-principle">
+              <p class="label about-principle__index">{String(index + 1).padStart(2, "0")}</p>
+              <h3 class="txt-h3">{principle.title}</h3>
+              <p class="txt-s txt-dim">{principle.body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    {
+      notes.length > 0 && (
+        <section class="container section" aria-labelledby="about-start">
+          <SectionHeader
+            title="Start here"
+            href={`/category/${categorySlug(NOTES_CATEGORY)}/`}
+            linkLabel="All the writing"
+            id="about-start"
+          />
+          <div class="grid-tall grid-tall--flush">
+            {notes.map((post, index) => (
+              <NoteCard post={post} badge={notesBadge(index)} headingLevel="h3" />
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </main>
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .about-figure {
+    margin: 0;
+  }
+
+  .about-figure__credit {
+    margin-top: 0.75rem;
+  }
+
+  .about-principle {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+  }
+
+  .about-principle__index {
+    color: var(--accent);
+  }
+
+  /* Three parts across the track: who, in their own words, and the record.
+     One column on a phone, and the full width earns its keep on a desktop —
+     a bio capped at its measure with the rest of the page empty beside it is
+     the thing this block used to be. */
+  .about-cook {
+    display: grid;
+    gap: 1.75rem;
+    align-items: start;
+  }
+
+  .about-cook__intro {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: center;
+  }
+
+  .about-cook__name {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .about-cook__body {
+    display: grid;
+    justify-items: start;
+    gap: 1rem;
+  }
+
+  .about-cook__eyebrow {
+    color: var(--accent);
+  }
+
+  .about-cook__bio {
+    max-width: 58ch;
+  }
+
+  /* The cook's record, ruled above and below like the brief on a recipe. */
+  .about-cook__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2.25rem;
+    width: 100%;
+    margin: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding-block: 0.9rem;
+  }
+
+  .about-cook__fact {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .about-cook__fact dt {
+    color: var(--muted-foreground);
+  }
+
+  .about-cook__fact dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-h4);
+    font-weight: var(--weight-title);
+    letter-spacing: var(--ls-title);
+  }
+
+  /* Text and arrow on one line: the link is a grid item, so without this the
+     block-level icon would drop under the words. */
+  .about-cook__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  @media (min-width: 64rem) {
+    .about-cook {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) minmax(0, 0.7fr);
+      gap: 3.5rem;
+    }
+
+    .about-cook__intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+      justify-items: start;
+    }
+
+    /* The record reads as a column rather than a strip once it has one of its
+       own: a rule down its left edge, and the facts stacked and ruled between,
+       the same way the front page's aside is divided from the list beside it. */
+    .about-cook__record {
+      border-left: 1px solid var(--border-strong);
+      padding-left: 3.5rem;
+    }
+
+    .about-cook__facts {
+      display: grid;
+      gap: 0;
+      border-top: 0;
+      border-bottom: 0;
+      padding-block: 0;
+    }
+
+    .about-cook__fact {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: baseline;
+      border-bottom: 1px solid var(--border);
+      padding-block: 0.7rem;
+    }
+
+    .about-cook__fact:first-child {
+      padding-top: 0;
+    }
+
+    .about-cook__fact:last-child {
+      border-bottom: 0;
+    }
+
+    .about-cook__fact dd {
+      text-align: right;
+    }
+  }
+</style>

@@ -1,0 +1,47 @@
+---
+import { Image } from "astro:assets";
+import { postHref, type Post } from "@/lib/posts";
+
+/**
+ * The reading section's card: a photograph carrying the headline, with a badge
+ * at the top and an underlined way in at the foot.
+ *
+ * It looks different from a recipe card on purpose. A field note has no cook
+ * time, no ingredient list, and nothing to shop for, so putting it in the same
+ * frame as a recipe would promise a reader something the page cannot deliver.
+ * Dark, typographic, and titled over the artwork — the tell is the treatment.
+ */
+interface Props {
+  post: Post;
+  /** "Note", "Guide", "Shopping" — the kind of writing, not the section. */
+  badge?: string;
+  headingLevel?: "h2" | "h3";
+  class?: string;
+}
+
+const { post, badge = "Note", headingLevel = "h3", class: className = "" } = Astro.props;
+const Heading = headingLevel;
+---
+
+<article class:list={["note-card", className]}>
+  <Image
+    src={post.data.cover.src}
+    alt=""
+    widths={[320, 480, 640, 880, 1120]}
+    sizes="(min-width: 96rem) calc(20vw - 29px), (min-width: 64rem) calc(25vw - 27px), (min-width: 48rem) calc(33.3vw - 24px), calc(50vw - 24px)"
+    loading="lazy"
+    decoding="async"
+  />
+  <span class="note-card__scrim" aria-hidden="true"></span>
+
+  <a class="hit" href={postHref(post)} aria-label={post.data.title}></a>
+
+  <span class="note-card__badge label">{badge}</span>
+
+  <div class="note-card__body">
+    <Heading class="txt-h3 note-card__title">{post.data.title}</Heading>
+    <p class="label note-card__more">
+      <span class="note-card__cue">Read it</span>
+    </p>
+  </div>
+</article>

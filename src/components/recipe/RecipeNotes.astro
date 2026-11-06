@@ -1,0 +1,61 @@
+---
+import type { RecipeData } from "@/lib/recipes";
+
+/**
+ * The things a cook only finds out the second time, plus what it keeps like and
+ * what it genuinely will not work without.
+ *
+ * It closes the recipe rather than opening it, because a note is only useful
+ * once you know what the step it corrects looks like. Renders nothing at all
+ * when there is nothing to say — an empty "Cook's notes" heading is worse than
+ * no heading.
+ */
+interface Props {
+  recipe: RecipeData;
+  class?: string;
+}
+
+const { recipe, class: className = "" } = Astro.props;
+const hasFoot = Boolean(recipe.keeps) || recipe.equipment.length > 0;
+const show = recipe.notes.length > 0 || hasFoot;
+---
+
+{
+  show && (
+    <section class:list={["cooksnotes", className]} aria-labelledby="notes-title" data-units-text>
+      <div class="cooksnotes__head">
+        <h2 class="txt-h3" id="notes-title">Cook's notes</h2>
+      </div>
+
+      {recipe.notes.length > 0 && (
+        <ul class="cooksnotes__list">
+          {recipe.notes.map((note) => (
+            <li class="cooksnotes__item">
+              <span class="cooksnotes__mark" aria-hidden="true">
+                &mdash;
+              </span>
+              <span>{note}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {hasFoot && (
+        <dl class="cooksnotes__foot">
+          {recipe.equipment.length > 0 && (
+            <div>
+              <dt class="label">You will need</dt>
+              <dd>{recipe.equipment.join(" · ")}</dd>
+            </div>
+          )}
+          {recipe.keeps && (
+            <div>
+              <dt class="label">Keeps</dt>
+              <dd>{recipe.keeps}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+    </section>
+  )
+}

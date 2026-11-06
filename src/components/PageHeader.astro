@@ -1,0 +1,91 @@
+---
+interface Props {
+  title: string;
+  eyebrow?: string;
+  description?: string;
+  meta?: string;
+  /** Set false when the block below opens with its own rule. */
+  divider?: boolean;
+  /** `center` sets the block on the page's axis — the section pages use it. */
+  align?: "start" | "center";
+  class?: string;
+}
+
+const {
+  title,
+  eyebrow,
+  description,
+  meta,
+  divider = true,
+  align = "start",
+  class: className = "",
+} = Astro.props;
+---
+
+<header
+  class:list={[
+    "page-header opener",
+    !divider && "page-header--flush",
+    align === "center" && "page-header--center",
+    className,
+  ]}
+>
+  {eyebrow && <p class="label page-header__eyebrow">{eyebrow}</p>}
+  <h1 class="txt-h1">{title}</h1>
+  {description && <p class="txt-l txt-dim page-header__description">{description}</p>}
+  {meta && <p class="txt-s txt-dim">{meta}</p>}
+  <slot />
+</header>
+
+<style>
+  .page-header {
+    display: grid;
+    gap: 0.9rem;
+    justify-items: start;
+    /* A double rule under the title block — the one place the page draws a
+       heavier line than a hairline, because it is the one heading that names
+       the whole page. */
+    border-bottom: 3px double var(--border-strong);
+    padding-block: clamp(2.5rem, 6vw, 4.5rem) 2rem;
+  }
+
+  .page-header--flush {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .page-header--center {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .page-header__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--accent);
+  }
+
+  .page-header__eyebrow::before {
+    width: 1.5rem;
+    height: 2px;
+    content: "";
+    background: var(--accent);
+  }
+
+  /* Centred, the dash sits on both sides of the word. */
+  .page-header--center .page-header__eyebrow::after {
+    width: 1.5rem;
+    height: 2px;
+    content: "";
+    background: var(--accent);
+  }
+
+  .page-header .txt-h1 {
+    max-width: 20ch;
+  }
+
+  .page-header__description {
+    max-width: 48ch;
+  }
+</style>

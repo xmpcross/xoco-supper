@@ -1,0 +1,156 @@
+---
+import { Image } from "astro:assets";
+import CategoryTag from "@/components/CategoryTag.astro";
+import CookTime from "@/components/ui/CookTime.astro";
+import { postHref, type Post } from "@/lib/posts";
+import { postMinutes } from "@/lib/recipes";
+
+interface Props {
+  post: Post;
+  /**
+   * `tall`    — 4:5 cover, the title, then the cook time (the front page
+   *             workhorse, and what the rails carry)
+   * `plate`   — a round cover and a centred title, nothing else
+   * `feature` — 4:3 cover above the tag and headline
+   * `media`   — landscape thumbnail beside the headline and standfirst
+   */
+  variant?: "tall" | "plate" | "feature" | "media";
+  /** Loads the cover eagerly — set it on cards that render above the fold. */
+  eager?: boolean;
+  showExcerpt?: boolean;
+  showCategory?: boolean;
+  headingLevel?: "h2" | "h3" | "h4";
+  class?: string;
+}
+
+const {
+  post,
+  variant = "tall",
+  eager = false,
+  showExcerpt = false,
+  showCategory = true,
+  headingLevel = "h3",
+  class: className = "",
+} = Astro.props;
+
+const href = postHref(post);
+const data = post.data;
+const image = data.cover;
+const loading = eager ? "eager" : "lazy";
+const Heading = headingLevel;
+/* Only a recipe has one, so every other card is untouched. */
+const minutes = postMinutes(post);
+---
+
+{
+  variant === "tall" && (
+    <article class:list={["card card--tall zoom-host", className]}>
+      <div class="media media--tall">
+        <Image
+          src={image.src}
+          alt={image.alt}
+          widths={[320, 480, 640, 880, 1120]}
+          sizes="(min-width: 96rem) calc(20vw - 29px), (min-width: 64rem) calc(25vw - 24px), (min-width: 48rem) 40vw, (min-width: 40rem) calc(50vw - 24px), calc(74vw - 24px)"
+          loading={loading}
+          decoding="async"
+        />
+      </div>
+      <a class="hit" href={href} aria-label={data.title} />
+      <div class="card__body">
+        <Heading class="txt-h3 card__title">{data.title}</Heading>
+        {showExcerpt && <p class="txt-s txt-dim line-clamp-2">{data.excerpt}</p>}
+        {(minutes !== undefined || showCategory) && (
+          <p class="card--tall__foot">
+            {minutes !== undefined ? (
+              <CookTime minutes={minutes} plain />
+            ) : (
+              <span class="label txt-dim">{data.category}</span>
+            )}
+          </p>
+        )}
+      </div>
+    </article>
+  )
+}
+
+{
+  /* Picture and title, and nothing at all between them. Used where the row is
+     already labelled by its section heading and a second tag on every card
+     would only repeat it. The crop is round: it is a plate. */
+  variant === "plate" && (
+    <article class:list={["card card--plate zoom-host", className]}>
+      <div class="media media--plate">
+        <Image
+          src={image.src}
+          alt={image.alt}
+          widths={[320, 480, 640, 880, 1120]}
+          sizes="(min-width: 96rem) calc(20vw - 29px), (min-width: 64rem) calc(25vw - 24px), (min-width: 48rem) 40vw, (min-width: 40rem) calc(50vw - 24px), calc(74vw - 24px)"
+          loading={loading}
+          decoding="async"
+        />
+      </div>
+      <a class="hit" href={href} aria-label={data.title} />
+      <Heading class="txt-h4 card__title card--plate__title">{data.title}</Heading>
+    </article>
+  )
+}
+
+{
+  variant === "feature" && (
+    <article class:list={["card zoom-host", className]}>
+      <div class="media media--card">
+        <Image
+          src={image.src}
+          alt={image.alt}
+          widths={[320, 480, 720, 960]}
+          sizes="(min-width: 64rem) 340px, (min-width: 40rem) 45vw, 92vw"
+          loading={loading}
+          decoding="async"
+        />
+      </div>
+      <a class="hit" href={href} aria-label={data.title} />
+      <div class="card__body">
+        {(showCategory || minutes !== undefined) && (
+          <div class="chip-row">
+            {showCategory && <CategoryTag category={data.category} />}
+            {minutes !== undefined && <CookTime minutes={minutes} />}
+          </div>
+        )}
+        <Heading class="txt-h3 card__title">{data.title}</Heading>
+        {showExcerpt && <p class="txt-s txt-dim line-clamp-2">{data.excerpt}</p>}
+      </div>
+    </article>
+  )
+}
+
+{
+  /* Thumbnail beside the type. Reads as a list rather than a grid, so a row of
+     two carries a set of six without the tiles shrinking. */
+  variant === "media" && (
+    <article class:list={["card-media", className]}>
+      <div class="card-media__media">
+        <Image
+          src={image.src}
+          alt=""
+          widths={[380, 560, 760, 1020]}
+          sizes="(min-width: 80rem) 17rem, (min-width: 48rem) 16rem, 46vw"
+          loading={loading}
+          decoding="async"
+        />
+        {showCategory && (
+          <span class="card-media__tag">
+            <CategoryTag category={data.category} variant="glass" linked={false} />
+          </span>
+        )}
+      </div>
+      <a class="hit" href={href} aria-label={data.title} />
+      <div class="card-media__body">
+        {minutes !== undefined && <CookTime minutes={minutes} class="card-media__time" />}
+        <Heading class="txt-h3 card-media__title">{data.title}</Heading>
+        {showExcerpt && (
+          <p class="txt-s txt-dim line-clamp-2 card-media__excerpt">{data.excerpt}</p>
+        )}
+      </div>
+    </article>
+  )
+}

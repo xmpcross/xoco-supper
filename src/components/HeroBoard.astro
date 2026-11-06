@@ -1,0 +1,101 @@
+---
+import { Image } from "astro:assets";
+import CategoryTag from "@/components/CategoryTag.astro";
+import CookTime from "@/components/ui/CookTime.astro";
+import { formatMinutes } from "@/config/recipe";
+import { postHref, type Post } from "@/lib/posts";
+import { activeMinutes, isRecipe, postMinutes } from "@/lib/recipes";
+
+/**
+ * The front page opening: one featured post as a photograph run edge to edge
+ * under the transparent header, its brief set over the foot of it, and the
+ * newest posts as a row of type beneath.
+ *
+ * The lead is whichever post is flagged `featured: true` in frontmatter, the
+ * newest of them if several are, and the newest post of all if none is — see
+ * `getFeatured`. The row under it has no pictures, which is what lets four more
+ * dishes fit in one line, and is what says on arrival that this is a site with
+ * an archive rather than a slideshow.
+ */
+interface Props {
+  lead?: Post;
+  also?: Post[];
+}
+
+const { lead, also = [] } = Astro.props;
+const leadRecipe = lead && isRecipe(lead) ? lead.data.recipe : undefined;
+---
+
+{
+  lead && (
+    <div class="hero">
+      <article class="hero__lead">
+        <div class="hero__media">
+          <Image
+            src={lead.data.cover.src}
+            alt={lead.data.cover.alt}
+            widths={[720, 1080, 1440, 2000, 2600]}
+            sizes="100vw"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </div>
+        <div class="hero__scrim" aria-hidden="true" />
+
+        <a class="hit" href={postHref(lead)} aria-label={lead.data.title} />
+
+        <div class="container hero__body">
+          <div class="hero__copy">
+            <div class="chip-row">
+              <CategoryTag category={lead.data.category} variant="glass" />
+            </div>
+
+            <h2 class="txt-d hero__title">{lead.data.title}</h2>
+
+            <p class="txt-l hero__standfirst">{lead.data.excerpt}</p>
+
+            {leadRecipe && (
+              <dl class="hero__facts">
+                <div class="hero__fact">
+                  <dt class="label">Time</dt>
+                  <dd>{formatMinutes(activeMinutes(leadRecipe))}</dd>
+                </div>
+                <div class="hero__fact">
+                  <dt class="label">Serves</dt>
+                  <dd class="nums">{leadRecipe.servings}</dd>
+                </div>
+                <div class="hero__fact">
+                  <dt class="label">Effort</dt>
+                  <dd>{leadRecipe.difficulty}</dd>
+                </div>
+              </dl>
+            )}
+          </div>
+        </div>
+      </article>
+
+      {also.length > 0 && (
+        <div class="container also-new">
+          <ol class="also-new__list">
+            {also.map((post) => {
+              const minutes = postMinutes(post);
+              return (
+                <li class="also-new__item">
+                  <a href={postHref(post)}>
+                    <span class="chip-row">
+                      <span class="label txt-dim">{post.data.category}</span>
+                      {minutes !== undefined && <CookTime minutes={minutes} plain />}
+                    </span>
+                    <span class="txt-h4 also-new__title">{post.data.title}</span>
+                    <span class="txt-s txt-dim line-clamp-2">{post.data.excerpt}</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
+    </div>
+  )
+}

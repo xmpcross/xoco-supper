@@ -1,0 +1,84 @@
+---
+import Icon from "@/components/ui/Icon.astro";
+
+/**
+ * Paging arrows for a `.rail`, bound to it by id.
+ *
+ * The rails hide their scrollbar, which leaves a mouse with no visible way to
+ * move a row that a trackpad and a touch screen can already swipe. These are
+ * that way — and they sit *beside the heading* rather than over the artwork,
+ * because a pair of buttons floating on a photograph of food covers the one
+ * thing the card is selling.
+ *
+ * There is no autoplay. Nothing on this front page moves on its own: the hero
+ * is three static panels for the same reason, and a row that advances while a
+ * reader is looking at it is a row they have to chase.
+ *
+ * Both directions wrap, so a reader who reaches the end can carry on rather
+ * than hitting a dead control. The buttons hide themselves when the row fits.
+ */
+interface Props {
+  /** The `id` on the rail this pair drives. */
+  rail: string;
+  /** Names the row in the button labels: "Scroll sections forwards". */
+  label: string;
+  /** Set when the arrows sit on a photograph rather than on the page. */
+  onImage?: boolean;
+  class?: string;
+}
+
+const { rail, label, onImage = false, class: className = "" } = Astro.props;
+---
+
+<div
+  class:list={["rail-nav", onImage && "rail-nav--onImage", className]}
+  data-rail-nav={rail}
+  hidden
+>
+  <button type="button" class="rail-nav__btn" data-rail-prev aria-label={`Scroll ${label} backwards`}>
+    <Icon name="arrow-left" size={17} />
+  </button>
+  <button type="button" class="rail-nav__btn" data-rail-next aria-label={`Scroll ${label} forwards`}>
+    <Icon name="arrow-right" size={17} />
+  </button>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-rail-nav]").forEach((nav) => {
+    const track = document.getElementById(nav.dataset.railNav ?? "");
+    const prev = nav.querySelector<HTMLButtonElement>("[data-rail-prev]");
+    const next = nav.querySelector<HTMLButtonElement>("[data-rail-next]");
+    if (!track || !prev || !next) return;
+
+    /** One card plus the gap, so a click always lands on a snap point. */
+    const step = () => {
+      const first = track.firstElementChild as HTMLElement | null;
+      if (!first) return track.clientWidth;
+      const gap = Number.parseFloat(getComputedStyle(track).columnGap) || 0;
+      return first.offsetWidth + gap;
+    };
+
+    const maxScroll = () => track.scrollWidth - track.clientWidth;
+    /* A few pixels of slack: sub-pixel layout means `scrollLeft` rarely lands
+       exactly on 0 or on the maximum. */
+    const scrollable = () => maxScroll() > 4;
+    const atStart = () => track.scrollLeft <= 4;
+    const atEnd = () => track.scrollLeft >= maxScroll() - 4;
+
+    const to = (left: number) => track.scrollTo({ left, behavior: "smooth" });
+
+    prev.addEventListener("click", () => (atStart() ? to(maxScroll()) : to(track.scrollLeft - step())));
+    next.addEventListener("click", () => (atEnd() ? to(0) : to(track.scrollLeft + step())));
+
+    /* Revealed only once there is something to page through, so a short archive
+       never shows two controls that cannot do anything. */
+    const paint = () => {
+      nav.hidden = !scrollable();
+    };
+
+    paint();
+    window.addEventListener("resize", paint);
+    /* The covers are lazy, so the track's width can grow after first paint. */
+    window.addEventListener("load", paint);
+  });
+</script>

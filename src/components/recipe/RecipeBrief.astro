@@ -1,0 +1,72 @@
+---
+import Icon from "@/components/ui/Icon.astro";
+import { difficultyMeta, formatMinutes } from "@/config/recipe";
+import { activeMinutes, ingredientCount, type RecipeData } from "@/lib/recipes";
+
+/**
+ * The panel that opens a recipe article. It answers the three questions a
+ * reader came with — how long, how many, how hard — and then gets out of the
+ * way, because the argument for cooking the thing is the article underneath.
+ *
+ * It is the one recipe block that is boxed rather than ruled, for the same
+ * reason it comes first: it is the only part of the page somebody might want on
+ * its own, and on a phone it is often the only part they read.
+ */
+interface Props {
+  recipe: RecipeData;
+  class?: string;
+}
+
+const { recipe, class: className = "" } = Astro.props;
+const total = activeMinutes(recipe);
+const count = ingredientCount(recipe);
+---
+
+<section class:list={["brief", className]} aria-labelledby="recipe-brief-title">
+  <div class="brief__head">
+    <h2 class="sr-only" id="recipe-brief-title">At a glance</h2>
+    <p class="label brief__yield">{recipe.yields}</p>
+    <p class="brief__difficulty">
+      <span class="txt-h4">{recipe.difficulty}</span>
+      <span class="txt-s brief__meaning">{difficultyMeta[recipe.difficulty]}</span>
+    </p>
+  </div>
+
+  <dl class="brief__facts">
+    <div class="brief__fact">
+      <dt class="label">Prep</dt>
+      <dd>{formatMinutes(recipe.prepMinutes)}</dd>
+    </div>
+    <div class="brief__fact">
+      <dt class="label">Cook</dt>
+      <dd>{formatMinutes(recipe.cookMinutes)}</dd>
+    </div>
+    <div class="brief__fact">
+      <dt class="label">Total</dt>
+      <dd>{formatMinutes(total)}</dd>
+    </div>
+    <div class="brief__fact">
+      <dt class="label">Serves</dt>
+      <dd>{recipe.servings}</dd>
+    </div>
+  </dl>
+
+  {
+    /* Resting is stated in words on its own line rather than added to the
+       total. A loaf that proves overnight is not a fourteen-hour recipe, and a
+       card that says so chases away the cook it was written for. */
+    recipe.restMinutes > 0 && (
+      <p class="brief__rest">
+        <span class="label brief__restLabel">Plus resting</span>
+        <span>{recipe.restNote ?? formatMinutes(recipe.restMinutes)}</span>
+      </p>
+    )
+  }
+
+  <div class="brief__actions">
+    <a class="btn" href="#ingredients">
+      <Icon name="bowl" size={15} />
+      Jump to the {count} ingredients
+    </a>
+  </div>
+</section>

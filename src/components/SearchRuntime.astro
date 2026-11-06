@@ -1,0 +1,157 @@
+---
+import { searchItems, type SearchItem } from "@/lib/search";
+import type { Post } from "@/lib/posts";
+
+/**
+ * The client half of search, shared by the two surfaces that use it: the
+ * command palette in the header and the results page. Both read the same
+ * `/search-index.json` and rank it with the same function, so a story cannot
+ * place differently depending on where it was searched from.
+ *
+ * Rendered once per page by `SiteHeader`, ahead of every consumer.
+ */
+interface Props {
+  posts: Post[];
+  /** Seeds the palette so it answers before the index has been fetched. */
+  seedCount?: number;
+}
+
+const { posts, seedCount = 8 } = Astro.props;
+const seed: SearchItem[] = (await searchItems(posts)).slice(0, seedCount);
+---
+
+{/* Handed over as data rather than as `define:vars`, so the script below stays
+    a plain inline script that a type checker can read straight through. */}
+<script is:inline type="application/json" id="search-seed" set:html={JSON.stringify(seed)} />
+
+<script is:inline>
+  (() => {
+    const seed = JSON.parse(document.getElementById("search-seed")?.textContent || "[]");
+    let items = null;
+    let pending;
+
+    /**
+     * Fetched the first time someone reaches for search rather than on page
+     * load, so a reader who never searches never pays for it. A failed fetch
+     * falls back to the seed already in the page, so search degrades to the
+     * newest stories instead of to an error.
+     */
+    const load = () => {
+      if (items) return Promise.resolve(items);
+
+      pending ??= fetch("/search-index.json")
+        .then((response) => {
+          if (!response.ok) throw new Error("Search index unavailable");
+          return response.json();
+        })
+        .then((data) => (items = Array.isArray(data) && data.length ? data : seed))
+        .catch(() => (items = seed));
+
+      return pending;
+    };
+
+    const escapeHtml = (value) =>
+      String(value).replace(
+        /[&<>"']/g,
+        (character) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[character],
+      );
+
+    const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    /* Matches a token at the start of any word, so "hot hat" reaches "Hot
+       Hatch" — the half-typed word a reader is still in the middle of. */
+    const startsWord = (text, token) =>
+      new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(token)}`, "u").test(text);
+
+    /**
+     * Lower is better, Infinity is no match. A headline hit always outranks a
+     * section or tag hit, which outranks a mention in the excerpt — so typing a
+     * title never buries it under stories that merely mention the word.
+     */
+    const rank = (item, query) => {
+      const tokens = query.split(/\s+/).filter(Boolean);
+      if (tokens.length === 0) return Number.POSITIVE_INFINITY;
+
+      const title = item.title.toLowerCase();
+      const taxonomy = `${item.category} ${(item.tags || []).join(" ")}`.toLowerCase();
+      const supporting = `${item.excerpt} ${item.author}`.toLowerCase();
+      const haystack = `${title} ${taxonomy} ${supporting}`;
+
+      // Every token has to land somewhere, so adding a word narrows the result
+      // set rather than widening it.
+      if (!tokens.every((token) => haystack.includes(token))) return Number.POSITIVE_INFINITY;
+
+      if (title.startsWith(query)) return 0;
+      if (tokens.every((token) => startsWord(title, token))) return 1;
+      if (title.includes(query)) return 2;
+      if (tokens.every((token) => taxonomy.includes(token))) return 3;
+      return 4;
+    };
+
+    const search = async (query) => {
+      const normalized = query.trim().toLowerCase();
+      if (!normalized) return [];
+
+      return (await load())
+        .map((item) => ({ item, rank: rank(item, normalized) }))
+        .filter((entry) => Number.isFinite(entry.rank))
+        .sort((a, b) => a.rank - b.rank)
+        .map((entry) => entry.item);
+    };
+
+    /*
+     * The cook-time chip for a result this script paints. Both surfaces build
+     * their own rows out of strings — no component reaches them — so the markup
+     * lives here once rather than twice, and has to stay in step with
+     * `CookTime.astro` and with `formatMinutes` in `src/config/recipe.ts`.
+     */
+    const formatMinutes = (minutes) => {
+      if (!(minutes > 0)) return "";
+      const hours = Math.floor(minutes / 60);
+      const rest = minutes % 60;
+      if (hours === 0) return rest + " min";
+      if (rest === 0) return hours + " hr";
+      return hours + " hr " + rest + " min";
+    };
+
+    const clockIcon = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" /><path d="M12 7v5.2l3.2 1.9" /></svg>`;
+
+    /** Absent on the writing, so a field note result never grows a time. */
+    const timeMarkup = (minutes) => {
+      if (typeof minutes !== "number") return "";
+      return `<span class="cook-time">${clockIcon}<span class="nums">${escapeHtml(formatMinutes(minutes))}</span></span>`;
+    };
+
+    /*
+     * One archive entry, built in the browser. The results page, the reading
+     * list, and the archive filters all paint their rows with this, and it has
+     * to stay in step with `PostRow.astro`, which paints the same entry on the
+     * server.
+     */
+    const rowMarkup = (item) => {
+      const media = item.cover
+        ? `<div class="row__media"><img src="${escapeHtml(item.cover)}" alt="" width="720" height="900" loading="lazy" decoding="async" /></div>`
+        : "";
+
+      return `
+        <a class="row${item.cover ? "" : " row--flush"}" href="${escapeHtml(item.href)}">
+          <div class="row__body">
+            <div class="row__head"><span class="tag">${escapeHtml(item.category)}</span>${timeMarkup(item.minutes)}</div>
+            <h2 class="txt-h3 row__title">${escapeHtml(item.title)}</h2>
+            <p class="txt-s txt-dim row__excerpt line-clamp-2">${escapeHtml(item.excerpt)}</p>
+          </div>
+          ${media}
+        </a>
+      `;
+    };
+
+    window.supperSearch = { load, search, rank, escapeHtml, timeMarkup, rowMarkup, seed };
+  })();
+</script>

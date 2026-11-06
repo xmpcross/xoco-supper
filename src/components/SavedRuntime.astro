@@ -1,0 +1,72 @@
+---
+/**
+ * The reading-list store: post slugs in `localStorage`, newest saved first,
+ * shared by every save button, the header dot, and the `/saved/` page. Rendered
+ * inline with a guard because more than one component includes it — the first
+ * copy on the page wins and the rest return early.
+ *
+ * Storage access is wrapped throughout: a browser that refuses site data
+ * reads as an empty list rather than an error, so the buttons stay usable
+ * and simply do not persist.
+ */
+---
+
+<script is:inline>
+  (() => {
+    if (window.supperSaved) return;
+
+    const KEY = "supper:saved";
+
+    const read = () => {
+      try {
+        const list = JSON.parse(localStorage.getItem(KEY) || "[]");
+        return Array.isArray(list) ? list.filter((slug) => typeof slug === "string") : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const write = (list) => {
+      try {
+        localStorage.setItem(KEY, JSON.stringify(list));
+      } catch {
+        /* Nothing to do: the page keeps working, the save just does not stick. */
+      }
+    };
+
+    /*
+     * Announced rather than polled, so anything that reflects the list — the
+     * save buttons, the count dot in the header, the toast — updates from one
+     * event instead of each one watching storage for itself.
+     *
+     * It reports the *action*, not the write: a listener that only needs the
+     * count can read `count`, and one that has something different to say about
+     * an add than a removal can read `saved`.
+     */
+    const announce = (slug, saved, count) =>
+      document.dispatchEvent(
+        new CustomEvent("supper:saved-change", { detail: { slug, saved, count } }),
+      );
+
+    const has = (slug) => read().includes(slug);
+
+    /** Returns whether the post is saved after the toggle. */
+    const toggle = (slug) => {
+      const list = read();
+      const at = list.indexOf(slug);
+      if (at === -1) list.unshift(slug);
+      else list.splice(at, 1);
+      write(list);
+      announce(slug, at === -1, list.length);
+      return at === -1;
+    };
+
+    const remove = (slug) => {
+      const list = read().filter((entry) => entry !== slug);
+      write(list);
+      announce(slug, false, list.length);
+    };
+
+    window.supperSaved = { list: read, has, toggle, remove };
+  })();
+</script>

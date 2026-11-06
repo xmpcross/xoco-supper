@@ -1,0 +1,5170 @@
+@import "tailwindcss";
+@source "../**/*.{astro,ts,md,mdx}";
+
+/* ==========================================================================
+   Supper — a cooking design system
+   --------------------------------------------------------------------------
+   A white page, a deep spinach green, an olive that only ever means "done".
+
+   * The page is white and stays white. Panels and cards sit on a buttermilk
+     tint of it rather than on a grey, so a photograph of food never lands on
+     a cold surface, and the neutral ramp runs from that tint down to a
+     near-black with green in it.
+   * Two accents, and they are not interchangeable. Spinach green is the
+     brand: links, focus, section markers, primary buttons, the dark panels.
+     Olive is a state, and the only one — a ticked ingredient, a step you have
+     finished. A reader learns it once, on their first recipe, and it is true
+     everywhere after that.
+   * Two typefaces, and they disagree on purpose. Young Serif sets headlines:
+     a soft, low-contrast serif in a single weight, so nothing on the page is
+     bold — the scale does that work. Figtree carries prose, metadata, and
+     every control, and is the only face in the ingredient list — a shopping
+     list is read at arm's length, in a kitchen, and that is no place for a
+     serif.
+   * Metadata is small tracked capitals: a bold byline, then a muted date. It
+     is the same line on a card, a rail, and a ledger row, so a reader scanning
+     the front page reads one rhythm rather than six. There is no read-time
+     estimate anywhere: the only duration worth printing beside a dish is how
+     long it takes to cook, and that has its own chip.
+   * One mode. There is no dark theme: every surface here is a shade of paper,
+     and a food photograph on a black page is somebody else's magazine.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Young Serif";
+  src: url("/fonts/young-serif/YoungSerif-Regular-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Young Serif";
+  src: url("/fonts/young-serif/YoungSerif-Regular-latin-ext.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("/fonts/figtree/Figtree-Variable-latin.woff2") format("woff2-variations");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("/fonts/figtree/Figtree-Variable-latin-ext.woff2") format("woff2-variations");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("/fonts/figtree/Figtree-Variable-italic-latin.woff2") format("woff2-variations");
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("/fonts/figtree/Figtree-Variable-italic-latin-ext.woff2") format("woff2-variations");
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-wash: var(--wash);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-sand: var(--sand);
+  --color-done: var(--done);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --radius-full: 999px;
+}
+
+:root {
+  /* White page, buttermilk panels. The ramp runs from that tint down to a
+     near-black with green in it, so a hairline and a dark card sit in the same
+     family as the accent. `--wash` is the step below a panel, for hover fills
+     and inset blocks. */
+  --n-0: #ffffff;
+  --n-25: #fcfbfa;
+  --n-50: #f9f7f5;
+  --n-75: #f4f1ee;
+  --n-100: #ece8e3;
+  --n-200: #dfd9d2;
+  --n-300: #c7c0b8;
+  --n-400: #9a958e;
+  --n-500: #6f7173;
+  --n-600: #4f5356;
+  --n-700: #343a40;
+  --n-800: #212529;
+  --n-900: #0c1a12;
+  --n-950: #002312;
+
+  /* The brand accent: spinach green. Links, focus, section markers, primary
+     buttons, the dark panels. `600` carries text and fills; `500` is the
+     hover, one step lighter. */
+  --brand-100: #e6f0e9;
+  --brand-200: #c9dfd1;
+  --brand-300: #5f9a78;
+  --brand-500: #0e5a36;
+  --brand-600: #073921;
+
+  /* The second accent, and the only one that is not decorative: olive means
+     "done". A ticked ingredient, a finished step, and nothing else — so the
+     colour is learned once and never has to be looked up again. */
+  --olive-500: #7a810d;
+  --olive-600: #656a0b;
+
+  color-scheme: light;
+  --background: var(--n-0);
+  /* Cards and panels sit on a buttermilk tint of the page: on white, a
+     hairline alone leaves a dense grid looking unbuilt. */
+  --surface: var(--n-50);
+  --wash: var(--n-75);
+  /* The accent-tinted panel ground, for blocks that have to ask for something
+     rather than just carry text. */
+  --wash-accent: var(--brand-100);
+  /* The band ground: the front page's tinted full-bleed strips and the
+     newsletter panel. Deep enough to divide the page without a rule. */
+  --sand: var(--n-200);
+  --foreground: var(--n-900);
+  --muted: var(--n-100);
+  --muted-foreground: var(--n-500);
+  --primary: var(--n-900);
+  --primary-foreground: var(--n-25);
+  --accent: var(--brand-600);
+  --accent-strong: var(--brand-500);
+  /* Text laid over an accent fill. */
+  --accent-foreground: var(--n-25);
+  /* The section chip, and the one place the accent hue appears as a fill
+     behind text. */
+  --tag-background: var(--brand-100);
+  --tag-foreground: var(--brand-600);
+  --border: #e8e4de;
+  --border-strong: #d3cdc4;
+  /* Ticked. Used by the ingredient list and the method, and nowhere else. */
+  --done: var(--olive-500);
+  --done-strong: var(--olive-600);
+  --ink: var(--n-950);
+  --ink-surface: var(--brand-600);
+  --ink-foreground: #f9f7f5;
+  --ink-muted: rgb(249 247 245 / 0.64);
+  --ink-border: rgb(249 247 245 / 0.18);
+  /* Scrim behind type laid over a cover photograph. Tinted towards the ink
+     rather than neutral, so it reads as shade on the food instead of as a grey
+     filter over it — and a gradient, so the top of the picture is untouched. */
+  --scrim: linear-gradient(
+    to top,
+    rgb(8 16 12 / 0.88) 0%,
+    rgb(8 16 12 / 0.64) 32%,
+    rgb(8 16 12 / 0.14) 66%,
+    rgb(8 16 12 / 0) 100%
+  );
+
+  --shadow-sm: 0 1px 2px rgb(0 35 18 / 0.07);
+  --shadow-md: 0 10px 28px -12px rgb(0 35 18 / 0.22);
+  --shadow-lg: 0 30px 60px -30px rgb(0 35 18 / 0.38);
+
+  /* Type ----------------------------------------------------------------- */
+  --font-display: "Young Serif", Georgia, "Times New Roman", serif;
+  --font-sans:
+    "Figtree", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Arial,
+    sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Consolas, Menlo, monospace;
+
+  --fs-d: clamp(2.25rem, 5vw, 4rem);
+  --fs-h1: 2.25rem;
+  --fs-h2: 1.75rem;
+  --fs-h3: 1.25rem;
+  --fs-h4: 1.0625rem;
+  --fs-h5: 0.9375rem;
+  --fs-l: 1.0625rem;
+  --fs-m: 1rem;
+  --fs-s: 0.875rem;
+  --fs-xs: 0.8125rem;
+  --fs-label: 0.6875rem;
+
+  /* A serif at display size needs less negative tracking and a little more
+     leading than a grotesque did: the thin strokes close up under tight
+     tracking, and the ascenders and descenders are longer. */
+  --lh-display: 1.02;
+  --lh-title: 1.2;
+  --lh-body: 1.62;
+  --ls-display: -0.014em;
+  --ls-title: -0.008em;
+  --ls-label: 0.09em;
+
+  /* Young Serif ships one weight, so nothing asks the browser to embolden it:
+     the scale does the work a bold would. */
+  --weight-display: 400;
+  --weight-title: 400;
+  --weight-body: 400;
+  --weight-strong: 600;
+
+  /* Shape ---------------------------------------------------------------- */
+  /* Near-square. A recipe card is a card, not a pebble: corners are softened
+     by a couple of pixels so a hairline never aliases, and no more. `--r-full`
+     is for avatars, dots, and the round plate crop — never for a control. */
+  --r-xs: 2px;
+  --r-sm: 3px;
+  --r-md: 4px;
+  --r-lg: 4px;
+  --r-xl: 6px;
+  --r-full: 999px;
+
+  /* Layout --------------------------------------------------------------- */
+  /* Full width with a gutter, rather than a boxed column. Food photography
+     wants the whole screen; the gutter is what stops it touching the edge. */
+  --container: 200rem;
+  --gutter: 1rem;
+  --reading: 44rem;
+  /* How far article media steps outside the reading column. Deliberately close
+     to `--reading`: a figure that jumps to the full `--container` track is
+     twice the measure it interrupts, which reads as a different page rather
+     than as a picture in this one. */
+  --reading-wide: 52rem;
+  /* Tighter than an essay theme on purpose: the front page runs nine blocks
+     deep and has to stay one scroll, not four. */
+  --section-gap: 2.75rem;
+  --header-height: 4.25rem;
+  /* Every tall cover on the site is cut to this. One number, so a hero panel,
+     a rail card, and a grid card all crop the same food the same way. */
+  --ratio-tall: 4 / 5;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.44, 1);
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: 1.25rem;
+    --section-gap: 3.25rem;
+    --fs-h1: 2.75rem;
+    --fs-h2: 2rem;
+    --fs-h3: 1.3125rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --gutter: 1.5rem;
+    --section-gap: 3.75rem;
+    --fs-h1: 3.25rem;
+    --fs-h2: 2.25rem;
+    --header-height: 4.75rem;
+  }
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-height) + 1.5rem);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  min-width: 320px;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: var(--fs-m);
+  font-weight: var(--weight-body);
+  line-height: var(--lh-body);
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body > main {
+  flex: 1 0 auto;
+}
+
+img,
+svg,
+video,
+picture {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--r-xs);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 400;
+  transform: translateY(-200%);
+  border-radius: var(--r-sm);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 0.7rem 1.2rem;
+  font-size: var(--fs-s);
+  font-weight: var(--weight-strong);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Type scale
+   --------------------------------------------------------------------------
+   Headlines are Young Serif; everything else is Figtree. `txt-*` sets size
+   and family together, so no block has to name a typeface.
+   ========================================================================== */
+
+.txt-d,
+.txt-h1,
+.txt-h2,
+.txt-h3,
+.txt-h4,
+.txt-h5 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  text-wrap: balance;
+}
+
+.txt-d {
+  font-size: var(--fs-d);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--ls-display);
+  line-height: var(--lh-display);
+}
+
+.txt-h1,
+.txt-h2 {
+  font-weight: var(--weight-display);
+  letter-spacing: var(--ls-display);
+  line-height: 1.12;
+}
+
+.txt-h3,
+.txt-h4,
+.txt-h5 {
+  font-weight: var(--weight-title);
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-title);
+}
+
+.txt-h1 {
+  font-size: var(--fs-h1);
+}
+.txt-h2 {
+  font-size: var(--fs-h2);
+}
+.txt-h3 {
+  font-size: var(--fs-h3);
+}
+.txt-h4 {
+  font-size: var(--fs-h4);
+}
+.txt-h5 {
+  font-size: var(--fs-h5);
+}
+
+.txt-l,
+.txt-m,
+.txt-s,
+.txt-xs {
+  margin: 0;
+  line-height: var(--lh-body);
+  text-wrap: pretty;
+}
+
+.txt-l {
+  font-size: var(--fs-l);
+  line-height: 1.5;
+}
+.txt-m {
+  font-size: var(--fs-m);
+}
+.txt-s {
+  font-size: var(--fs-s);
+}
+.txt-xs {
+  font-size: var(--fs-xs);
+}
+
+.txt-dim {
+  color: var(--muted-foreground);
+}
+
+/* Small tracked capitals: eyebrows, section markers, counts. */
+.label {
+  display: inline-block;
+  margin: 0;
+  font-size: var(--fs-label);
+  font-weight: 650;
+  letter-spacing: var(--ls-label);
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+/* Numerals that have to line up down a column: ranks, stats, dates. */
+.nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+
+.container {
+  width: 100%;
+  max-width: calc(var(--container) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.container-reading {
+  width: 100%;
+  max-width: calc(var(--reading) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-bottom: var(--section-gap);
+}
+
+.section-top {
+  padding-top: var(--section-gap);
+}
+
+/* A block that follows something inside its own section — the rail under a
+   band — where a full section gap would separate them instead of pairing them. */
+.section-top-sm {
+  padding-top: 1.1rem;
+}
+
+/* The list that opens an index page. It follows straight on from the page
+   header, which already carries a rule, so a full section gap would read as a
+   hole rather than as a separation. */
+.section-tight {
+  padding-top: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+/*
+ * Hairline grid. The 1px gap shows the grid's own background through, which
+ * draws perfect rules between cells however the tracks wrap — no per-child
+ * border resets and no doubled lines at the seams.
+ */
+.grid-hairline {
+  display: grid;
+  overflow: hidden;
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--border);
+}
+
+.grid-hairline > * {
+  background: var(--surface);
+}
+
+/* ==========================================================================
+   Section headings
+   --------------------------------------------------------------------------
+   The section name at subhead scale, and an underlined way out of it. Nine
+   blocks run down the front page, so each one has to announce itself in a
+   glance — a tracked-capitals eyebrow at 11px cannot do that nine times, and
+   the reader ends up scrolling a wall of pictures with no idea where they are.
+
+   The rule above is opt-in (`--ruled`): most blocks are already separated by
+   the whitespace their pictures sit in.
+   ========================================================================== */
+
+.section-head {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.section-head__bar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+}
+
+.section-head__name {
+  min-width: 0;
+}
+
+/* The dotted leader between the name and the way out, as on a contents page.
+   It is what makes nine section bars read as one index rather than nine
+   headings that each happen to have a link on the right. */
+.section-head__leader {
+  flex: 1 1 2rem;
+  min-width: 2rem;
+  align-self: baseline;
+  border-bottom: 2px dotted var(--border-strong);
+  transform: translateY(-0.3em);
+}
+
+.section-head__count {
+  margin-left: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-s);
+  font-weight: 450;
+  letter-spacing: 0;
+}
+
+/* Underlined rather than chipped or arrowed: it is the same "see the rest of
+   it" on all nine blocks, so it should be the quietest thing in the bar. */
+/* The link, and anything slotted in beside it — a rail's arrows. */
+.section-head__end {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 1rem;
+}
+
+/*
+ * Off on a phone. At 390px the heading, two arrows and the way out do not fit
+ * one line without crowding, and a touch screen already swipes the row — the
+ * arrows exist for the pointer that cannot.
+ */
+.rail-nav {
+  display: none;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* `:not([hidden])` matters: a bare `display: flex` on a class selector beats
+   the user agent's rule for the `hidden` attribute, which would show the
+   arrows on a row that has nothing to scroll. */
+@media (min-width: 48rem) {
+  .rail-nav:not([hidden]) {
+    display: flex;
+  }
+}
+
+.rail-nav__btn {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--foreground);
+  cursor: pointer;
+  place-items: center;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.rail-nav__btn:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* On the band the arrows sit on a photograph, so they frost it rather than
+   borrowing the page's fills — the same treatment the cook-time chip uses. */
+.rail-nav--onImage .rail-nav__btn {
+  border-color: rgb(255 255 255 / 0.32);
+  background: rgb(8 16 12 / 0.36);
+  color: #ffffff;
+  backdrop-filter: blur(8px) saturate(120%);
+}
+
+.rail-nav--onImage .rail-nav__btn:hover {
+  border-color: #ffffff;
+  background: #ffffff;
+  color: var(--foreground);
+}
+
+.section-link {
+  flex-shrink: 0;
+  color: var(--foreground);
+  font-size: var(--fs-s);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.28em;
+  transition:
+    color 0.22s ease,
+    text-decoration-color 0.22s ease;
+}
+
+.section-link:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+/* ==========================================================================
+   Text swap — nav, buttons, bylines
+   ========================================================================== */
+
+.swap {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.swap::after {
+  position: absolute;
+  inset: 0;
+  content: attr(data-swap);
+  transform: translateY(110%);
+  transition: transform 0.34s var(--ease-out);
+}
+
+.swap > span {
+  display: block;
+  transition: transform 0.34s var(--ease-out);
+}
+
+:is(a, button):hover .swap > span,
+:is(a, button):focus-visible .swap > span {
+  transform: translateY(-110%);
+}
+
+:is(a, button):hover .swap::after,
+:is(a, button):focus-visible .swap::after {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Buttons & controls
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 2.5rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--accent);
+  color: var(--accent-foreground);
+  cursor: pointer;
+  padding-inline: 1.25rem;
+  font-size: var(--fs-s);
+  font-weight: var(--weight-strong);
+  white-space: nowrap;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s var(--ease-out),
+    box-shadow 0.25s ease;
+}
+
+.btn:hover {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--accent-foreground);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn--lg {
+  height: 3rem;
+  padding-inline: 1.6rem;
+  font-size: var(--fs-m);
+}
+
+.btn--line {
+  border-color: var(--border-strong);
+  background: transparent;
+  color: var(--foreground);
+}
+
+.btn--line:hover {
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.btn[disabled] {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  box-shadow: none;
+}
+
+.icon-btn {
+  display: inline-grid;
+  width: 2.375rem;
+  height: 2.375rem;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    color 0.22s ease,
+    transform 0.22s var(--ease-out);
+}
+
+.icon-btn:hover {
+  background: var(--wash);
+  color: var(--accent);
+}
+
+.icon-btn--line {
+  border-color: var(--border-strong);
+}
+
+.icon-btn--line:hover {
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
+  transform: translateY(-1px);
+}
+
+.icon-btn[disabled] {
+  cursor: default;
+  opacity: 0.3;
+  transform: none;
+}
+
+/* Inline email capture: one box holding the field and its button. */
+.field {
+  display: flex;
+  align-items: center;
+  height: 3rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  padding: 0.25rem 0.25rem 0.25rem 1rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.field__input {
+  min-width: 0;
+  flex: 1;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  outline: none;
+  padding-inline: 0 0.75rem;
+  font-size: var(--fs-s);
+}
+
+.field__input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.field__input:disabled {
+  cursor: not-allowed;
+}
+
+.field .btn {
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.input {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--foreground);
+  padding: 0.75rem 1rem;
+  font-size: var(--fs-s);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.form-note {
+  color: var(--muted-foreground);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+
+.form-note a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* ==========================================================================
+   Tags & chips
+   ========================================================================== */
+
+/* The section tag: a stamp. Outlined rather than filled, so a row of cards
+   does not read as a row of coloured labels — the photograph is the colour. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border-strong));
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--tag-foreground);
+  padding-inline: 0.5rem;
+  font-size: var(--fs-label);
+  font-weight: 650;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease;
+}
+
+a.tag:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* A tag sitting on cover imagery carries its own contrast. */
+.tag--glass {
+  border-color: transparent;
+  background: rgb(255 255 255 / 0.92);
+  color: var(--n-900);
+}
+
+a.tag--glass:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Neutral chip: tag pages, filters, anything not naming a section. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 2.125rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--foreground);
+  padding-inline: 0.9rem;
+  font-size: var(--fs-s);
+  font-weight: var(--weight-strong);
+  white-space: nowrap;
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    color 0.22s ease,
+    transform 0.22s var(--ease-out);
+}
+
+a.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ==========================================================================
+   Cook time
+   --------------------------------------------------------------------------
+   The one number a recipe card carries, in the slot a star row would occupy on
+   a review site — and for the same reason. It is the fact that decides whether
+   somebody clicks, so it is a filled chip rather than a line of metadata.
+
+   Resting time is not in it. A loaf that proves overnight is not a fourteen
+   hour recipe, and a card that says so chases away the cook it was written for.
+   ========================================================================== */
+
+.cook-time {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.32rem;
+  border-radius: var(--r-sm);
+  background: var(--muted);
+  padding: 0.22rem 0.55rem 0.22rem 0.45rem;
+  color: var(--foreground);
+  font-size: var(--fs-label);
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+}
+
+.cook-time--md {
+  padding: 0.3rem 0.7rem 0.3rem 0.58rem;
+  font-size: var(--fs-xs);
+}
+
+.cook-time svg {
+  flex: none;
+  opacity: 0.62;
+}
+
+/*
+ * On a photograph the chip cannot borrow the page's fills, so it frosts the
+ * picture instead — but *dark*, unlike the glass section tag. A white frost
+ * over a bowl of pale rice or a white plate leaves white text on white, and
+ * half the food on this site is photographed on white crockery. A dark frost
+ * holds over both.
+ */
+.cook-time--onImage {
+  border: 1px solid rgb(255 255 255 / 0.16);
+  background: rgb(8 16 12 / 0.52);
+  color: #ffffff;
+  backdrop-filter: blur(8px) saturate(120%);
+}
+
+.cook-time--onImage svg {
+  opacity: 0.8;
+}
+
+/* Set as a line of metadata rather than a chip: the tall card and the hero
+   facts, where the number sits in type and a filled pill would shout. */
+.cook-time--plain {
+  background: transparent;
+  padding: 0;
+  color: var(--muted-foreground);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cook-time--plain svg {
+  opacity: 0.75;
+}
+
+/* The media card lays its body out as a grid, which blockifies the chip and
+   would otherwise stretch it the full width of the column. */
+.card-media__time {
+  justify-self: start;
+}
+
+/* ==========================================================================
+   Media
+   ========================================================================== */
+
+.media {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--muted);
+}
+
+.media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    scale 0.7s var(--ease-out),
+    filter 0.4s ease;
+}
+
+.media--photo {
+  aspect-ratio: 3 / 2;
+}
+
+.media--card {
+  aspect-ratio: 4 / 3;
+}
+
+/* The site's default crop. Food photographs tall — a plate, a glass, a loaf on
+   a board all fill a 4:5 frame and lose their subject in a 16:9 one. */
+.media--tall {
+  aspect-ratio: var(--ratio-tall);
+}
+
+/* The second pair covers the case where the frame is the hover target itself,
+   as in the lead story, where the link and the media are one element. */
+.zoom-host:hover .media img,
+.zoom-host:focus-within .media img,
+.media.zoom-host:hover img,
+.media.zoom-host:focus-visible img {
+  scale: 1.04;
+}
+
+/* ==========================================================================
+   Avatars
+   ========================================================================== */
+
+.avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--r-full);
+  /* Portrait, when there is one, is set inline as a background-image. */
+  background-color: var(--muted);
+  background-position: center;
+  background-size: cover;
+  color: var(--foreground);
+  font-size: var(--fs-label);
+  font-weight: 650;
+  line-height: 1;
+}
+
+.avatar--sm {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.5rem;
+}
+
+.avatar--md {
+  width: 2.375rem;
+  height: 2.375rem;
+}
+
+.avatar--lg {
+  width: 3.25rem;
+  height: 3.25rem;
+  font-size: var(--fs-s);
+}
+
+.avatar--xl {
+  width: 4.75rem;
+  height: 4.75rem;
+  font-size: var(--fs-m);
+}
+
+.avatar--onDark {
+  background-color: rgb(255 255 255 / 0.12);
+  color: #fff;
+}
+
+/* ==========================================================================
+   Post meta
+   --------------------------------------------------------------------------
+   Two lines of tracked capitals: the byline in the text colour, then the date
+   and read time in grey. Identical on a card, a trending column, and an
+   article header, so the eye learns it once.
+   ========================================================================== */
+
+.meta {
+  display: grid;
+  gap: 0.2rem;
+  font-size: var(--fs-label);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+/* Sits above `.hit` so the byline stays independently clickable. */
+.meta__byline {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-self: start;
+  color: var(--foreground);
+  transition: color 0.22s ease;
+}
+
+.meta__byline:hover {
+  color: var(--accent);
+}
+
+.meta__facts {
+  color: var(--muted-foreground);
+  font-weight: 550;
+}
+
+/* One-row variant, for article headers and tight rails. */
+.meta--inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+}
+
+/* Set over a cover photograph — the `cover` and `immersive` article heads. */
+.meta--onDark,
+.meta--onDark .meta__byline {
+  color: var(--ink-foreground);
+}
+
+.meta--onDark .meta__facts,
+.meta--onDark .meta__conjunction {
+  color: var(--ink-muted);
+}
+
+/* Coauthored bylines ------------------------------------------------------- */
+
+/*
+ * Portraits overlap into one stack, so a three-name byline is no taller and
+ * barely wider than a one-name byline. The ring is the page ground rather than
+ * a border, so the stack reads as depth instead of as outlined circles.
+ */
+.avatar-stack {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.avatar-stack--multi .avatar {
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.avatar-stack--multi .avatar + .avatar {
+  margin-left: -0.5rem;
+}
+
+/* On a photograph there is no page ground to ring against, so the stack
+   separates with a translucent white instead. */
+.posthero__head--onImage .avatar-stack--multi .avatar {
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.55);
+}
+
+.meta__byline .avatar-stack {
+  margin-right: 0.1rem;
+}
+
+.meta__author {
+  color: inherit;
+}
+
+/* "By", "&", and the "+2" tail: connective tissue, not names, so they take the
+   muted colour and never the hover. */
+.meta__conjunction {
+  color: var(--muted-foreground);
+  font-weight: 550;
+}
+
+.meta__conjunction--tight {
+  margin-left: -0.35rem;
+}
+
+/* ==========================================================================
+   Hero — the front page opening
+   --------------------------------------------------------------------------
+   One photograph, its recipe set beside it on the paper, and the next few
+   dishes as type alone down the right-hand side.
+
+   The lead's copy sits *next to* the picture rather than over it on a scrim.
+   That is the difference between a recipe and a magazine cover: a cook wants
+   to read the time, the servings and the shopping list, and none of those
+   survive being set in white over a bowl of pale food. The side column has no
+   pictures at all, which is what lets four more dishes fit beside one.
+   ========================================================================== */
+
+/* ==========================================================================
+   Front page hero
+   --------------------------------------------------------------------------
+   One featured post run the full width of the page, its brief set over the
+   foot of the photograph, and the newest posts as a row of type beneath it.
+   ========================================================================== */
+
+.hero {
+  display: grid;
+  gap: 2rem;
+}
+
+/* Edge to edge, and starting under the transparent header — see
+   `has-overlay-header`. Sized by `min-height` and the copy rather than by a
+   ratio, so a long headline lengthens the block instead of spilling out. */
+.hero__lead {
+  position: relative;
+  display: grid;
+  min-height: clamp(30rem, 92svh, 54rem);
+  align-content: end;
+  overflow: hidden;
+  background: var(--ink);
+  isolation: isolate;
+}
+
+.hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.hero__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.9s var(--ease-out);
+}
+
+.hero__lead:hover .hero__media img {
+  scale: 1.03;
+}
+
+/* The page scrim at the foot, and a second shade at the top so the white
+   header type holds over a pale plate. */
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--scrim), linear-gradient(to bottom, rgb(8 16 12 / 0.55), rgb(8 16 12 / 0) 28%);
+  pointer-events: none;
+}
+
+/* A `.container`, so the copy lines up with the gutter of everything below. */
+.hero__body {
+  padding-block: 2rem clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.hero__copy {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  max-width: 46rem;
+  color: #ffffff;
+}
+
+/* Lifted above the whole-card hit area so the tag stays its own link. */
+.hero__copy .chip-row {
+  position: relative;
+  z-index: 3;
+  color: rgb(255 255 255 / 0.82);
+}
+
+.hero__title {
+  max-width: 18ch;
+  color: #ffffff;
+}
+
+.hero__standfirst {
+  max-width: 52ch;
+  color: rgb(255 255 255 / 0.84);
+}
+
+/* The three numbers a cook decides on. */
+.hero__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.75rem;
+  margin: 0.25rem 0 0;
+}
+
+.hero__fact {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.hero__fact dt {
+  color: rgb(255 255 255 / 0.66);
+}
+
+.hero__fact dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  letter-spacing: var(--ls-title);
+}
+
+/* The newest posts as type in a row: rules between the rows on a phone, and
+   between the columns once they sit side by side. */
+.also-new {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.also-new__list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.also-new__item {
+  min-width: 0;
+}
+
+.also-new__item a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem;
+  border-top: 1px solid var(--border);
+  padding-block: 1rem;
+}
+
+.also-new__title {
+  transition: color 0.25s ease;
+}
+
+.also-new__item a:hover .also-new__title {
+  color: var(--accent);
+}
+
+@media (min-width: 48rem) {
+  .also-new__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2rem;
+  }
+
+  .also-new__item:nth-child(-n + 2) a {
+    border-top: 0;
+    padding-top: 0.25rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .also-new__list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 0;
+  }
+
+  .also-new__item a {
+    border-top: 0;
+    border-left: 1px solid var(--border);
+    padding-block: 0.25rem 0.5rem;
+    padding-inline: 1.5rem;
+  }
+
+  .also-new__item:first-child a {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .also-new__item:last-child a {
+    padding-right: 0;
+  }
+}
+
+/* ==========================================================================
+   Post cards
+   ========================================================================== */
+
+/*
+ * Whole-block hit area. Absolutely positioned, so it paints over the static
+ * copy beneath and the entire card is clickable — headline included. Links
+ * that must stay independently clickable (byline, section tag) lift
+ * themselves above it instead.
+ */
+.hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+}
+
+.card .chip-row,
+.trend .chip-row {
+  position: relative;
+  z-index: 3;
+  align-self: start;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.card__title {
+  transition: color 0.25s ease;
+}
+
+.card:hover .card__title {
+  color: var(--accent);
+}
+
+/* --- The tall card ----------------------------------------------------- */
+
+.card--tall {
+  gap: 0.8rem;
+}
+
+.card--tall .card__body {
+  gap: 0.35rem;
+}
+
+/* The chip on the photograph is gone: a grid of eight covers reads cleaner
+   without eight pills, and the number is still the first thing under the
+   dish name. */
+.card--tall__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.3rem;
+}
+
+/* --- The plate card --------------------------------------------------- */
+
+/* Round, because a plate is. The small-plates row is the one place the crop
+   is a circle, so the section is recognisable from across the page. */
+.card--plate {
+  gap: 0.85rem;
+  text-align: center;
+}
+
+.media--plate {
+  aspect-ratio: 1;
+  border-radius: var(--r-full);
+}
+
+.card--plate__title {
+  padding-inline: 0.5rem;
+  text-wrap: pretty;
+}
+
+/* --- The reading card ------------------------------------------------- */
+
+/*
+ * A field note has no cook time, no ingredients, and nothing to shop for, so it
+ * cannot sit in a recipe card without promising something the page will not
+ * deliver. The tell is the treatment: dark, typographic, titled over the
+ * artwork rather than under it.
+ */
+.note-card {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--ink);
+  aspect-ratio: var(--ratio-tall);
+  isolation: isolate;
+  align-items: flex-end;
+}
+
+.note-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.8s var(--ease-out);
+}
+
+.note-card:hover img {
+  scale: 1.04;
+}
+
+/* Heavier than a story scrim, and reaching further up the frame: the headline
+   here is the whole card, so it has to hold at four lines. */
+.note-card__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgb(8 16 12 / 0.92) 0%,
+    rgb(8 16 12 / 0.72) 42%,
+    rgb(8 16 12 / 0.24) 78%,
+    rgb(8 16 12 / 0.1) 100%
+  );
+}
+
+.note-card__badge {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  z-index: 1;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  border-radius: var(--r-full);
+  background: rgb(255 255 255 / 0.16);
+  padding: 0.28rem 0.6rem;
+  color: #ffffff;
+  backdrop-filter: blur(8px) saturate(140%);
+}
+
+.note-card__body {
+  position: relative;
+  display: grid;
+  width: 100%;
+  gap: 0.6rem;
+  padding: 1rem;
+  color: #ffffff;
+}
+
+.note-card__title {
+  color: #ffffff;
+  text-wrap: pretty;
+}
+
+.note-card__more {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgb(255 255 255 / 0.9);
+}
+
+/* The underline is on the words, not the row — carried by the container it
+   would run under the read time too and read as one four-word link. */
+.note-card__cue {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+}
+
+.note-card:hover .note-card__more {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Trending columns
+   --------------------------------------------------------------------------
+   Text-only stories side by side, separated by vertical rules. No pictures:
+   it is the block that shows the archive runs deeper than the photographs
+   above it.
+   ========================================================================== */
+
+.trend-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+}
+
+.trend {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+}
+
+.trend__title {
+  transition: color 0.25s ease;
+}
+
+.trend:hover .trend__title {
+  color: var(--accent);
+}
+
+/*
+ * One narrow track, ruled between the rows rather than beside them. The stacked
+ * variant opts out of every column rule below by staying at one column, so the
+ * media queries that follow never apply to it.
+ */
+.trend-grid--stack {
+  gap: 0;
+}
+
+.trend-grid--stack > * {
+  border-top: 1px solid var(--border);
+  padding-block: 0.9rem;
+}
+
+.trend-grid--stack > :first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+@media (min-width: 40rem) {
+  .trend-grid:not(.trend-grid--stack) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.25rem;
+  }
+
+  .trend-grid:not(.trend-grid--stack) > * {
+    border-left: 1px solid var(--border-strong);
+    padding-left: 2.25rem;
+  }
+
+  .trend-grid:not(.trend-grid--stack) > :nth-child(2n + 1) {
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 64rem) {
+  .trend-grid:not(.trend-grid--stack) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* Back to a rule on every column but the first, now that the row no longer
+     wraps at every other item. */
+  .trend-grid:not(.trend-grid--stack) > :nth-child(2n + 1) {
+    border-left: 1px solid var(--border-strong);
+    padding-left: 2.25rem;
+  }
+
+  .trend-grid:not(.trend-grid--stack) > :first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+
+/* ==========================================================================
+   Index rows — the archive ledger
+   ========================================================================== */
+
+/*
+ * Each entry is the type on the left and the cover large on the right, and on
+ * a desktop two entries share a row. Rules run *above* entries rather than
+ * below, and the first row goes without: every page that opens a list does so
+ * under a page header that already draws a line, and a trailing rule at the
+ * foot would underline nothing.
+ */
+.index-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 2.5rem;
+}
+
+.index-list > :first-child {
+  border-top: 0;
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 40%);
+  align-items: center;
+  gap: 1.25rem;
+  border-top: 1px solid var(--border);
+  padding-block: 1.5rem;
+}
+
+.row--flush {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.row__body {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.85rem;
+}
+
+.row__title {
+  transition: color 0.25s ease;
+}
+
+.row:hover .row__title {
+  color: var(--accent);
+}
+
+/* The standfirst is the first thing to go on a phone, where the type has
+   less than half the width to run in. */
+.row__excerpt {
+  display: none;
+}
+
+/* Landscape, so the picture sits level with its four lines of type rather
+   than towering over them, and large enough that a page of twelve reads as
+   pictures rather than as a ledger with thumbnails. */
+.row__media {
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-md);
+  background: var(--muted);
+}
+
+.row__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.6s var(--ease-out);
+}
+
+.row:hover .row__media img {
+  scale: 1.04;
+}
+
+@media (min-width: 40rem) {
+  .row {
+    gap: 1.75rem;
+    padding-block: 1.75rem;
+  }
+
+  .row__excerpt {
+    display: -webkit-box;
+    max-width: 52ch;
+  }
+}
+
+@media (min-width: 64rem) {
+  .index-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 0;
+  }
+
+  /* Two a row, so the first *two* entries sit directly under the header. */
+  .index-list > :nth-child(-n + 2) {
+    border-top: 0;
+  }
+
+  /* A rule down the middle, so an entry's picture is read with its own type
+     and not with the headline of the entry beside it. */
+  .index-list > :nth-child(odd) {
+    border-right: 1px solid var(--border);
+    padding-right: 2.5rem;
+  }
+
+  .index-list > :nth-child(even) {
+    padding-left: 2.5rem;
+  }
+
+  .row {
+    gap: 2rem;
+    padding-block: 2rem;
+  }
+}
+
+/* ==========================================================================
+   Ranked chart
+   ========================================================================== */
+
+.chart {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: chart;
+}
+
+.chart__item {
+  counter-increment: chart;
+}
+
+.chart__link {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: baseline;
+  border-top: 1px solid var(--border);
+  padding-block: 1rem;
+  transition: color 0.25s ease;
+}
+
+.chart__item:first-child .chart__link {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* Two-digit ranks, so 01 through 09 keep the column aligned. */
+.chart__link::before {
+  content: counter(chart, decimal-leading-zero);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.chart__link:hover {
+  color: var(--accent);
+}
+
+.chart__body {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+/* ==========================================================================
+   Collection tiles — the front page table of contents
+   --------------------------------------------------------------------------
+   Every section as a tall photograph with its name set across the middle. The
+   artwork comes from the newest recipe in that section, so the row restages
+   itself as the archive grows and there is no separate set of section covers
+   to keep in sync.
+
+   It scrolls rather than wrapping. Seven sections will not fit a desktop row
+   at a readable size, and a two-row grid of four-and-three reads as a mistake
+   — so the row is a rail, and the tile clipped by the right edge is what says
+   there is more of it.
+   ========================================================================== */
+
+.tile {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--muted);
+  aspect-ratio: var(--ratio-tall);
+  isolation: isolate;
+  place-items: center;
+  text-align: center;
+}
+
+.tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.8s var(--ease-out);
+}
+
+.tile:hover img,
+.tile:focus-visible img {
+  scale: 1.05;
+}
+
+/* Darker at both ends than the story scrims: the name sits in the middle of
+   the frame, where a photograph of food is at its busiest. */
+.tile__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgb(8 16 12 / 0.52) 0%,
+    rgb(8 16 12 / 0.42) 46%,
+    rgb(8 16 12 / 0.38) 100%
+  );
+  transition: opacity 0.4s ease;
+}
+
+.tile:hover .tile__scrim {
+  opacity: 0.82;
+}
+
+.tile__body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  color: #ffffff;
+}
+
+.tile__name {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2.6vw, 1.6rem);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--ls-title);
+  line-height: 1.1;
+  text-shadow: 0 1px 24px rgb(8 16 12 / 0.4);
+}
+
+.tile__blurb {
+  color: rgb(255 255 255 / 0.88);
+  font-family: var(--font-sans);
+  font-size: var(--fs-m);
+  font-style: italic;
+}
+
+.tile__count {
+  color: rgb(255 255 255 / 0.78);
+}
+
+/* ==========================================================================
+   Contributors
+   ========================================================================== */
+
+.author-chip {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.15rem 1.35rem;
+}
+
+/* The masthead card: portrait above the name so the bio has the full width of
+   the cell to run in, rather than a column beside a picture. */
+.author-chip--full {
+  flex-direction: column;
+  align-items: start;
+  gap: 1rem;
+  padding-block: 1.6rem;
+}
+
+.author-chip__body {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.author-chip__bio {
+  margin-top: 0.6rem;
+  max-width: 42ch;
+}
+
+/*
+ * Hover moves the portrait and the name, not the cell. A background wash inside
+ * a hairline grid reads as a misaligned block, because the tint stops at the
+ * cell padding while the rules do not.
+ */
+.author-chip__avatar {
+  transition:
+    scale 0.3s var(--ease-out),
+    box-shadow 0.3s ease;
+}
+
+.author-chip:hover .author-chip__avatar {
+  scale: 1.06;
+  box-shadow: 0 0 0 3px var(--tag-background);
+}
+
+.author-chip__name {
+  transition: color 0.25s ease;
+}
+
+.author-chip:hover .author-chip__name {
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .author-chip__avatar {
+    transition: none;
+  }
+}
+
+/* Thumbnail beside the type — the "more reporting" list ------------------- */
+
+/*
+ * A list item rather than a card: the picture is a fixed column and the text
+ * runs beside it, so two of these side by side carry six stories without the
+ * pictures shrinking to postage stamps the way a six-up grid would.
+ */
+.card-media {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  /* Centred against the picture rather than hung from its top edge: the text is
+     the shorter column, so aligning to the start leaves all the slack in one
+     lump underneath it. */
+  align-items: center;
+  gap: 1rem;
+}
+
+.card-media__media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-md);
+  background: var(--muted);
+}
+
+.card-media__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.6s var(--ease-out);
+}
+
+.card-media:hover .card-media__media img {
+  scale: 1.04;
+}
+
+/* Over the picture, where it labels the story without taking a line of its
+   own away from the headline. */
+.card-media__tag {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1;
+}
+
+.card-media__body {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.card-media__title {
+  transition: color 0.25s ease;
+}
+
+.card-media:hover .card-media__title {
+  color: var(--accent);
+}
+
+/* Two lines of standfirst next to the picture on a phone is a column four
+   words wide — the headline and the date carry the row on their own there.
+   Two classes deep, and it restates the clamp utility's display value to come
+   back: .line-clamp-2 sets display too and is declared further down. */
+.card-media .card-media__excerpt {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  .card-media {
+    grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+    gap: 1.35rem;
+  }
+
+  .card-media .card-media__excerpt {
+    display: -webkit-box;
+  }
+}
+
+/* The list splits into two columns here, so each picture gets a narrower
+   share again. */
+@media (min-width: 64rem) {
+  .card-media {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 80rem) {
+  .card-media {
+    grid-template-columns: minmax(0, 17rem) minmax(0, 1fr);
+  }
+}
+
+/* Two columns of the list, not two columns of cards. */
+.grid-media {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem 2.5rem;
+}
+
+@media (min-width: 64rem) {
+  .grid-media {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================================================
+   Grids
+   ========================================================================== */
+
+.grid-cards {
+  display: grid;
+  gap: 2rem 1.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 40rem) {
+  .grid-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .grid-cards--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .grid-cards--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/*
+ * Ruled column set. Each child carries its own left rule and the matching
+ * padding, so the tracks read as newspaper columns rather than as detached
+ * cards. `--cols` sets the desktop track count.
+ */
+.grid-columns {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 48rem) {
+  .grid-columns {
+    grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .grid-columns > * {
+    border-left: 1px solid var(--border-strong);
+    padding-inline: 1.5rem;
+  }
+
+  .grid-columns > :first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .grid-columns > :last-child {
+    padding-right: 0;
+  }
+}
+
+/*
+ * The dense picture grid: four tall cards a row on a desktop, two on a phone,
+ * and tighter gutters than `.grid-cards` because the covers are doing the
+ * separating. This is what most of the front page is made of.
+ */
+.grid-tall {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem 1rem;
+}
+
+@media (min-width: 48rem) {
+  .grid-tall {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .grid-tall {
+    grid-template-columns: repeat(var(--tall-cols, 4), minmax(0, 1fr));
+    gap: 1.85rem 1.25rem;
+  }
+}
+
+/* The track is the full window, so past 1536px a fifth card fits without the
+   covers shrinking. A page that sets `--tall-cols` keeps its own count. */
+@media (min-width: 96rem) {
+  .grid-tall {
+    grid-template-columns: repeat(var(--tall-cols, 5), minmax(0, 1fr));
+    gap: 2rem 1.5rem;
+  }
+}
+
+/*
+ * `--flush` drops the last partial row rather than leaving one or two cards
+ * hanging under a full grid. The column count changes four times down the
+ * breakpoints and the post count does not, so a block dealt ten recipes shows
+ * ten at five columns, eight at four, and nine at three.
+ *
+ * How it reads: a card that starts a row (`Cn + 1`) and is among the last
+ * `C - 1` cards is starting a row that cannot be filled, so it and everything
+ * after it comes off. `:not(:first-child)` is the guard that matters — without
+ * it a block holding less than one full row would hide itself entirely.
+ *
+ * Written per column count and in ranges rather than `min-width`, so exactly
+ * one rule is live at a time. A grid that sets its own `--tall-cols` needs its
+ * own.
+ */
+@media (max-width: 47.999rem) {
+  .grid-tall--flush > :nth-child(2n + 1):not(:first-child):nth-last-child(-n + 1),
+  .grid-tall--flush > :nth-child(2n + 1):not(:first-child):nth-last-child(-n + 1) ~ * {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 63.999rem) {
+  .grid-tall--flush > :nth-child(3n + 1):not(:first-child):nth-last-child(-n + 2),
+  .grid-tall--flush > :nth-child(3n + 1):not(:first-child):nth-last-child(-n + 2) ~ * {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) and (max-width: 95.999rem) {
+  .grid-tall--flush > :nth-child(4n + 1):not(:first-child):nth-last-child(-n + 3),
+  .grid-tall--flush > :nth-child(4n + 1):not(:first-child):nth-last-child(-n + 3) ~ * {
+    display: none;
+  }
+}
+
+@media (min-width: 96rem) {
+  .grid-tall--flush > :nth-child(5n + 1):not(:first-child):nth-last-child(-n + 4),
+  .grid-tall--flush > :nth-child(5n + 1):not(:first-child):nth-last-child(-n + 4) ~ * {
+    display: none;
+  }
+}
+
+/*
+ * Horizontal rails, for the rows that are longer than a screen: the section
+ * tiles, the quick recipes, the ones on repeat. Grid rather than flex, because
+ * `grid-auto-columns` sizes every card off the track width in one declaration
+ * and there is no flex-basis arithmetic to keep in sync with the gap.
+ *
+ * There are no arrow buttons. The rail is a scroll container, so a trackpad, a
+ * touch screen, a wheel, and the keyboard all already work — and two absolutely
+ * positioned buttons over the artwork would cover the food to say so.
+ */
+.rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 74%;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  /* Hidden, and replaced by the arrows in the section heading — see
+     `RailNav.astro`. A native horizontal scrollbar under a row of food
+     photography is the loudest thing in the block and it is chrome, not
+     content. Keyboard scrolling still works: the track is focusable. */
+  scrollbar-width: none;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail > * {
+  scroll-snap-align: start;
+}
+
+/* The track takes focus so the arrow keys can move it, which is the only thing
+   hiding the scrollbar would otherwise have cost. */
+.rail:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--r-sm);
+}
+
+@media (min-width: 40rem) {
+  .rail {
+    grid-auto-columns: 40%;
+  }
+}
+
+@media (min-width: 64rem) {
+  .rail {
+    grid-auto-columns: calc((100% - 3rem) / 4);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 96rem) {
+  .rail {
+    grid-auto-columns: calc((100% - 6rem) / 5);
+    gap: 1.5rem;
+  }
+}
+
+/*
+ * Runs off the right edge of the track on purpose. A card cut by the viewport
+ * is the only honest way to say a row scrolls, and it is the one thing arrows
+ * would otherwise be needed for.
+ */
+.rail--bleed {
+  margin-right: calc(var(--gutter) * -1);
+  padding-right: var(--gutter);
+}
+
+/* A wide column beside a narrow ruled one. */
+.split {
+  display: grid;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (min-width: 64rem) {
+  .split {
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+    gap: 3.5rem;
+  }
+
+  .split__aside {
+    border-left: 1px solid var(--border-strong);
+    padding-left: 3.5rem;
+  }
+}
+
+.grid-hairline--2,
+.grid-hairline--3 {
+  grid-template-columns: 1fr;
+}
+
+.grid-hairline--4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 40rem) {
+  .grid-hairline--2,
+  .grid-hairline--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .grid-hairline--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .grid-hairline--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================================================
+   Bands — the full-bleed tinted strips
+   --------------------------------------------------------------------------
+   A photograph washed in the accent with a title set over it, used twice on the
+   front page to break a long run of white-ground grids into chapters.
+
+   The wash is why it works. Behind it is an ordinary food photograph; in front
+   of it is a single line of display type. Tinting the picture rather than
+   cropping it means the band never competes with the cards above and below for
+   attention, and the two accents in the gradient are already on the page.
+   ========================================================================== */
+
+.band {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--sand);
+  min-height: clamp(9rem, 20vw, 14rem);
+  isolation: isolate;
+  align-items: flex-end;
+}
+
+.band img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*
+ * Three layers, and the order matters. A dark wedge into the bottom-left corner
+ * where the title actually sits, a short scrim along the foot, and then the
+ * accent wash over the whole frame. The wash alone is not enough: it lifts the
+ * photograph towards the accent but it does not darken it, and a white title
+ * over a bowl of pale food needs something that does.
+ */
+.band__tint {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(75deg, rgb(8 16 12 / 0.62) 0%, rgb(8 16 12 / 0.18) 38%, rgb(8 16 12 / 0) 62%),
+    linear-gradient(to top, rgb(8 16 12 / 0.34) 0%, rgb(8 16 12 / 0) 62%),
+    linear-gradient(
+      100deg,
+      rgb(231 130 72 / 0.72) 0%,
+      rgb(214 198 160 / 0.5) 56%,
+      rgb(231 130 72 / 0.34) 100%
+    );
+}
+
+.band__body {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  padding: clamp(1rem, 3vw, 1.85rem);
+  color: #ffffff;
+}
+
+.band__copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.3rem;
+}
+
+.band__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4.2vw, 2.5rem);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--ls-display);
+  line-height: 1.1;
+  text-shadow: 0 1px 30px rgb(8 16 12 / 0.35);
+}
+
+.band__note {
+  max-width: 46ch;
+  color: rgb(255 255 255 / 0.86);
+}
+
+/* ==========================================================================
+   Archive filters
+   --------------------------------------------------------------------------
+   One button under the page header, and a dialog with three dropdowns —
+   section, time, effort — each labelled by nothing but its own first option.
+   ========================================================================== */
+
+.filters {
+  display: grid;
+  justify-items: center;
+  margin: 1.5rem 0 2rem;
+}
+
+.filters__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.filters__open {
+  gap: 0.55rem;
+}
+
+/* How many are set, riding in the button. */
+.filters__count {
+  display: inline-grid;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: var(--accent-foreground);
+  padding-inline: 0.3rem;
+  font-size: var(--fs-label);
+  font-weight: 650;
+  line-height: 1;
+}
+
+/* The chevron is painted by the wrapper, so the select itself can drop the
+   platform arrow and take the same box as every other control. */
+.filters__select {
+  position: relative;
+  display: flex;
+}
+
+.filters__select::after {
+  position: absolute;
+  top: 50%;
+  right: 0.9rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  content: "";
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.filters__select select {
+  appearance: none;
+  width: 100%;
+  height: 2.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+  padding: 0 2.25rem 0 0.9rem;
+  font-size: var(--fs-m);
+  font-weight: var(--weight-strong);
+  transition: border-color 0.2s ease;
+}
+
+.filters__select select:hover {
+  border-color: var(--foreground);
+}
+
+.filters__select select:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.filters__clear {
+  border: 0;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding: 0;
+  font-size: var(--fs-s);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.28em;
+  transition: color 0.2s ease;
+}
+
+.filters__clear:hover {
+  color: var(--accent);
+}
+
+.filters__summary {
+  text-align: center;
+}
+
+.filters__empty {
+  padding-block: 2rem;
+}
+
+html.has-open-filters,
+html.has-open-filters body {
+  overflow: hidden;
+}
+
+.filters-dialog {
+  width: min(26rem, calc(100vw - 2rem));
+  max-width: none;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: transparent;
+  padding: 0;
+  margin: min(14vh, 8rem) auto 0;
+}
+
+.filters-dialog::backdrop {
+  background: rgb(16 16 18 / 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.filters-dialog[open] {
+  animation: dialog-in 0.28s var(--ease-out);
+}
+
+.filters-dialog__panel {
+  display: grid;
+  gap: 1.25rem;
+  margin: 0;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  padding: 1.25rem;
+}
+
+.filters-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.filters-dialog__fields {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.filters-dialog__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+/* The attribute has to beat the grid display the list class sets. */
+.index-list[hidden],
+[data-archive-list][hidden],
+[data-archive-pagination][hidden] {
+  display: none;
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+
+/*
+ * The masthead: section names on the left, the wordmark in the centre, and the
+ * three controls on the right. On a phone the names go — wordmark left,
+ * controls right.
+ */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+  transition: transform 0.35s var(--ease-out);
+}
+
+.site-header.is-hidden {
+  transform: translateY(-100%);
+}
+
+.site-header:focus-within {
+  transform: translateY(0);
+}
+
+.site-header__inner {
+  display: flex;
+  height: var(--header-height);
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 400;
+  letter-spacing: -0.012em;
+  transition: color 0.25s ease;
+}
+
+.wordmark:hover {
+  color: var(--accent);
+}
+
+.site-nav {
+  display: none;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.site-nav__link {
+  border-bottom: 2px solid transparent;
+  padding-block: 0.35rem;
+  color: var(--foreground);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.site-nav__link:hover,
+.site-nav__link[aria-current="page"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.header-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+/* Icon and word together: "Search", "Saved", "Menu". A glyph on its own is
+   the tell of an app; a word beside it is the tell of a publication. */
+.header-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.375rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  padding-inline: 0.6rem;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease;
+}
+
+.header-action:hover {
+  background: var(--wash);
+  color: var(--accent);
+}
+
+.header-action__label {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  /* Three tracks, so the wordmark is centred on the page and not on whatever
+     is left between the nav and the controls. */
+  .site-header__inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .site-nav {
+    display: flex;
+  }
+
+  .header-actions {
+    justify-self: end;
+    gap: 0.35rem;
+  }
+
+  .header-action__label {
+    display: inline;
+  }
+}
+
+/* ==========================================================================
+   Recipes panel
+   --------------------------------------------------------------------------
+   A child of the bar rather than of the nav, so it runs the whole width of the
+   viewport and sits flush under it with no gap for the pointer to fall
+   through. One class on the bar opens it — see the header script — so there
+   is no hover chain to break halfway across.
+   ========================================================================== */
+
+.site-nav__link--mega {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.site-nav__caret {
+  transition: transform 0.22s var(--ease-out);
+}
+
+.site-header.is-mega-open .site-nav__link--mega {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.site-header.is-mega-open .site-nav__link--mega .site-nav__caret {
+  transform: rotate(180deg);
+}
+
+.mega {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  display: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  translate: 0 -0.35rem;
+  transition:
+    opacity 0.22s var(--ease-out),
+    translate 0.22s var(--ease-out),
+    display 0.22s allow-discrete;
+}
+
+/* Below the nav breakpoint the drawer owns the sections, and the panel stays
+   shut whatever the class says. */
+@media (min-width: 64rem) {
+  .site-header.is-mega-open .mega {
+    display: block;
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .site-header.is-mega-open .mega {
+      opacity: 0;
+      translate: 0 -0.35rem;
+    }
+  }
+}
+
+.mega__inner {
+  display: grid;
+  grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+  gap: 2.5rem 3rem;
+  padding-block: 1.75rem 2rem;
+}
+
+.mega__lead {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+}
+
+.mega__links {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mega__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-block: 0.3rem;
+  color: var(--muted-foreground);
+  font-size: var(--fs-s);
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.mega__link--all {
+  color: var(--foreground);
+}
+
+.mega__link:hover {
+  color: var(--accent);
+}
+
+.mega__note {
+  max-width: 26ch;
+}
+
+.mega__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 84rem) {
+  .mega__grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.mega__tile {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.mega__media {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-md);
+  background: var(--muted);
+}
+
+.mega__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.5s var(--ease-out);
+}
+
+.mega__tile:hover .mega__media img,
+.mega__tile:focus-visible .mega__media img {
+  scale: 1.05;
+}
+
+.mega__name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-h5);
+  letter-spacing: var(--ls-title);
+  transition: color 0.2s ease;
+}
+
+.mega__name svg {
+  flex: none;
+  opacity: 0;
+  translate: -0.25rem 0;
+  transition:
+    opacity 0.25s ease,
+    translate 0.25s var(--ease-out);
+}
+
+.mega__tile:hover .mega__name,
+.mega__tile[aria-current="page"] .mega__name {
+  color: var(--accent);
+}
+
+.mega__tile:hover .mega__name svg {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.mega__blurb {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mega,
+  .mega__media img,
+  .mega__name svg,
+  .site-nav__caret {
+    transition: none;
+  }
+
+  .mega__tile:hover .mega__media img {
+    scale: 1;
+  }
+}
+
+/* ==========================================================================
+   Search dialog
+   ========================================================================== */
+
+html.has-open-search,
+html.has-open-search body {
+  overflow: hidden;
+}
+
+.search-dialog {
+  width: min(42rem, calc(100vw - 2rem));
+  max-width: none;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: transparent;
+  padding: 0;
+  /* Sits a little above centre so the results list grows downwards into empty
+     space rather than pushing the field off the top of the screen. */
+  margin: min(12vh, 6rem) auto 0;
+}
+
+.search-dialog::backdrop {
+  background: rgb(16 16 18 / 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.search-dialog[open] {
+  animation: dialog-in 0.28s var(--ease-out);
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(0.98);
+  }
+}
+
+.search-command {
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.search-command-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  padding: 0.85rem 1rem;
+}
+
+.search-command-icon {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+}
+
+.search-command-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  outline: none;
+  font-size: var(--fs-l);
+  font-weight: 500;
+}
+
+.search-command-input::placeholder {
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+
+/* The palette already carries a close control, and `type="search"` adds the
+   browser's own clear button beside it — two crosses, one of which is not
+   styled by this theme. The results page keeps its native one, where it is the
+   only way to clear the field with a mouse. */
+.search-command-input::-webkit-search-cancel-button,
+.search-command-input::-webkit-search-decoration {
+  appearance: none;
+  display: none;
+}
+
+.search-command-body {
+  max-height: min(60vh, 30rem);
+  overflow-y: auto;
+  padding: 0.85rem 0.65rem 0.9rem;
+}
+
+.search-command-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0.6rem 0.6rem;
+}
+
+.search-command-results {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: var(--r-sm);
+  padding: 0.65rem 0.6rem;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.search-result:hover,
+.search-result:focus-visible {
+  background: var(--wash);
+  color: var(--accent);
+  outline: none;
+}
+
+.search-result-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.search-result-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h5);
+  font-weight: var(--weight-title);
+  letter-spacing: var(--ls-title);
+}
+
+.search-result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  color: var(--muted-foreground);
+  font-size: var(--fs-xs);
+}
+
+.search-result-arrow {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(-0.35rem);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s var(--ease-out);
+}
+
+.search-result:hover .search-result-arrow,
+.search-result:focus-visible .search-result-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.search-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.25rem 0.6rem;
+}
+
+.search-empty-icon {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: var(--r-full);
+  background: var(--wash);
+  color: var(--muted-foreground);
+  font-weight: 650;
+}
+
+/* ==========================================================================
+   Site drawer
+   --------------------------------------------------------------------------
+   The site's contents page. It slides in from the right, under the Menu
+   control that opens it, and lists every section as a numbered row with its
+   blurb and its count — a table of contents rather than a list of links. On a
+   phone it takes the whole screen.
+   ========================================================================== */
+
+html.has-open-drawer,
+html.has-open-drawer body {
+  overflow: hidden;
+}
+
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 290;
+  display: none;
+  background: rgb(16 16 18 / 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: scrim-in 0.3s ease;
+}
+
+html.has-open-drawer .drawer-scrim {
+  display: block;
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.drawer[hidden] {
+  display: none;
+}
+
+.drawer {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 300;
+  display: flex;
+  width: min(30rem, 100vw);
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-left: 1px solid var(--border);
+  background: var(--background);
+  padding: 0 clamp(1.25rem, 4vw, 2rem) 1.5rem;
+  animation: drawer-in 0.32s var(--ease-out);
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+.drawer__bar {
+  display: flex;
+  height: 4.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer__body {
+  display: grid;
+  align-content: start;
+  gap: 2rem;
+  flex: 1;
+  padding-block: 1.5rem 2rem;
+}
+
+/* A field, not an icon: the drawer is where a reader goes to look for
+   something, so the search affordance is spelled out. */
+.drawer__search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  height: 2.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding-inline: 0.9rem;
+  font-size: var(--fs-s);
+  text-align: left;
+  transition:
+    border-color 0.22s ease,
+    color 0.22s ease;
+}
+
+.drawer__search span {
+  flex: 1;
+}
+
+.drawer__search:hover {
+  border-color: var(--foreground);
+  color: var(--foreground);
+}
+
+.drawer__search kbd {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xs);
+  padding: 0.05rem 0.35rem;
+  font-family: inherit;
+  font-size: var(--fs-label);
+}
+
+/* `align-content: start` matters where two groups share a row: the shorter
+   one would otherwise stretch to the taller, spreading the slack between its
+   label and its rows so the two columns no longer line up. */
+.drawer__group {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+}
+
+.drawer__grid .drawer__list {
+  align-content: start;
+}
+
+.drawer__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* The contents rows: name and blurb on the left, the count on the right. */
+.drawer__toc {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.drawer__toc-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-block: 0.8rem;
+}
+
+.drawer__toc > li:last-child .drawer__toc-row {
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer__toc-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: var(--weight-title);
+  letter-spacing: var(--ls-title);
+  line-height: 1.15;
+  transition: color 0.2s ease;
+}
+
+.drawer__toc-blurb {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: var(--fs-s);
+  font-style: italic;
+}
+
+.drawer__toc-count {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.drawer__toc-row:hover .drawer__toc-name,
+.drawer__toc-row[aria-current="page"] .drawer__toc-name {
+  color: var(--accent);
+}
+
+/* The two short lists — opening layouts and the site pages — side by side. */
+.drawer__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Both short lists — the post layouts and the site pages — share one row, so
+   the two columns line up rule for rule. */
+.drawer__small {
+  display: block;
+  border-top: 1px solid var(--border);
+  padding-block: 0.6rem;
+  color: var(--foreground);
+  font-size: var(--fs-s);
+  font-weight: var(--weight-strong);
+  transition: color 0.2s ease;
+}
+
+.drawer__small:hover,
+.drawer__small[aria-current="page"] {
+  color: var(--accent);
+}
+
+.drawer__foot {
+  display: grid;
+  flex-shrink: 0;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+.drawer__foot-copy {
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: var(--fs-m);
+  font-style: italic;
+}
+
+.drawer__foot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.drawer__socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ==========================================================================
+   Article
+   ========================================================================== */
+
+.reading-progress {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 250;
+  height: 3px;
+  background: transparent;
+}
+
+.reading-progress__bar {
+  height: 100%;
+  width: var(--progress, 0%);
+  border-radius: 0 var(--r-full) var(--r-full) 0;
+  background: var(--accent);
+  transition: width 0.1s linear;
+}
+
+/* --------------------------------------------------------------------------
+   Story layouts
+   --------------------------------------------------------------------------
+   Four openings sharing one title block. `standard` keeps the cover inside the
+   reading column and `banner` runs it edge to edge above the type; `cover` and
+   `immersive` set the type on the photograph itself, and only `immersive` runs
+   to full height and hands the header a transparent overlay to sit in.
+   -------------------------------------------------------------------------- */
+
+.posthero__head {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  padding-block: clamp(2rem, 5vw, 3.5rem) 0;
+}
+
+.posthero__standfirst {
+  max-width: 52ch;
+}
+
+.posthero__byline {
+  margin-top: 0.35rem;
+}
+
+/* `auto` inline margins matter here: the container classes centre the figure
+   and a shorthand reset would knock it back to the left edge. */
+.posthero__figure {
+  margin: clamp(1.75rem, 4vw, 2.75rem) auto 0;
+}
+
+/* On a photograph the block goes light in both colour themes: it sits on the
+   picture, not on the page, so the muted greys have nothing to sit against. */
+.posthero__head--onImage {
+  padding-block: 0;
+  max-width: 46rem;
+  color: #fff;
+}
+
+.posthero__head--onImage .posthero__standfirst {
+  color: rgb(255 255 255 / 0.82);
+}
+
+.posthero__credit--onImage {
+  color: rgb(255 255 255 / 0.7);
+}
+
+/* The immersive opening is the one place type is not aligned to the left edge
+   of the track, so the byline row has to be re-centred with the block. */
+.posthero__head--center {
+  justify-items: center;
+  max-width: none;
+  text-align: center;
+}
+
+.posthero__head--center .meta {
+  justify-content: center;
+}
+
+/* Banner ------------------------------------------------------------------ */
+
+.posthero-banner {
+  margin: 0;
+}
+
+/* A fixed band rather than a ratio: a strip that runs off both edges of the
+   viewport would otherwise grow taller the wider the screen gets. */
+.posthero-banner__media {
+  overflow: hidden;
+  height: clamp(13rem, 36vw, 26rem);
+  background: var(--muted);
+}
+
+.posthero-banner__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Cover -------------------------------------------------------------------- */
+
+.posthero-cover {
+  position: relative;
+  display: grid;
+  min-height: clamp(24rem, 72svh, 42rem);
+  align-content: end;
+  overflow: hidden;
+  background: var(--muted);
+  isolation: isolate;
+}
+
+.posthero-cover__media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.posthero-cover__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.posthero-cover__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--scrim);
+}
+
+.posthero-cover__inner {
+  padding-block: clamp(2rem, 5vw, 3.5rem);
+}
+
+/* Immersive --------------------------------------------------------------- */
+
+.posthero-immersive {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  align-content: end;
+  overflow: hidden;
+  background: var(--muted);
+  isolation: isolate;
+}
+
+.posthero-immersive__media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.posthero-immersive__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*
+ * Weighted at both ends and clear through the middle, unlike the single
+ * bottom-weighted `--scrim`: the top has to keep the overlaid header legible,
+ * the foot carries the title block, and the centre of the photograph — the
+ * reason the layout exists — is left alone.
+ */
+.posthero-immersive__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(10 10 12 / 0.52) 0%,
+      rgb(10 10 12 / 0.12) 24%,
+      rgb(10 10 12 / 0) 44%
+    ),
+    linear-gradient(
+      0deg,
+      rgb(10 10 12 / 0.84) 0%,
+      rgb(10 10 12 / 0.52) 26%,
+      rgb(10 10 12 / 0.14) 52%,
+      rgb(10 10 12 / 0) 72%
+    );
+}
+
+.posthero-immersive__inner {
+  padding-top: calc(var(--header-height) + 4rem);
+  padding-bottom: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+/* Held to the reading measure and centred in the track, so the headline stays
+   a readable number of words per line at any viewport width. */
+.posthero-immersive__stage {
+  max-width: var(--reading);
+  margin-inline: auto;
+}
+
+/*
+ * Overlay header. Set on <body> by the front page and by articles that open
+ * with an immersive hero: the bar loses its ground and its rule, and its type
+ * flips to white, so the photograph starts at the very top of the page. It
+ * scrolls away with the artwork; past it, scrolling up brings the bar back
+ * fixed and solid (`is-floating`, added by the header script), and the
+ * overlay treatment returns at the top of the page.
+ */
+body.has-overlay-header .site-header:not(.is-floating) {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+/* Solid again while the recipes panel is open, so the panel hangs from a bar
+   rather than from a strip of photograph. */
+body.has-overlay-header .site-header:not(.is-floating):not(.is-mega-open) {
+  border-bottom-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #fff;
+}
+
+/* Fixed rather than sticky, so returning to the flow never shifts the page. */
+body.has-overlay-header .site-header.is-floating {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+body.has-overlay-header .site-header:not(.is-floating):not(.is-mega-open) .wordmark,
+body.has-overlay-header .site-header:not(.is-floating):not(.is-mega-open) .site-nav__link,
+body.has-overlay-header .site-header:not(.is-floating):not(.is-mega-open) .header-action {
+  color: #fff;
+}
+
+body.has-overlay-header .site-header:not(.is-floating):not(.is-mega-open) .site-nav__link:hover,
+body.has-overlay-header
+  .site-header:not(.is-floating):not(.is-mega-open)
+  .site-nav__link[aria-current="page"] {
+  border-color: #fff;
+  color: #fff;
+}
+
+body.has-overlay-header .site-header:not(.is-floating):not(.is-mega-open) .header-action:hover {
+  background: rgb(255 255 255 / 0.14);
+  color: #fff;
+}
+
+/* ==========================================================================
+   Article media — figures, galleries, and the enlarged view
+   --------------------------------------------------------------------------
+   Used by `.mdx` posts through the components in `src/components/content`.
+   Plain `.md` posts carry none of this and are unaffected.
+   ========================================================================== */
+
+.figure {
+  margin: clamp(2rem, 4vw, 2.75rem) 0;
+}
+
+/* A step outside the reading column, not a leap to the full track. The
+   negative margins are capped by the viewport, so this never causes a
+   horizontal scrollbar. */
+.figure--wide {
+  width: min(var(--reading-wide), 92vw);
+  margin-inline: calc(50% - min(var(--reading-wide), 92vw) / 2);
+}
+
+.figure__btn {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--muted);
+  cursor: zoom-in;
+  padding: 0;
+}
+
+.figure__btn img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.6s var(--ease-out);
+}
+
+.figure__btn:hover img {
+  scale: 1.02;
+}
+
+.figure__caption {
+  margin-top: 0.75rem;
+  color: var(--muted-foreground);
+  font-size: var(--fs-s);
+  line-height: 1.5;
+}
+
+.figure__credit {
+  margin-left: 0.5rem;
+  opacity: 0.75;
+}
+
+.figure__credit::before {
+  content: "— ";
+}
+
+/* Gallery ------------------------------------------------------------------ */
+
+/*
+ * Two shapes from one markup. Up to three images the rail is a plain grid that
+ * fills the track; from four it becomes a slider, so the tiles keep a readable
+ * width instead of shrinking to fit the count. The arrows sit over the left and
+ * right edges of the pictures — a control bar underneath reads as a separate
+ * widget rather than as part of the set it steers.
+ */
+.gallery {
+  --gallery-gap: 0.85rem;
+  position: relative;
+  margin: clamp(2rem, 4vw, 2.75rem) 0;
+}
+
+.gallery__rail {
+  display: grid;
+  grid-template-columns: repeat(var(--gallery-cols, 3), minmax(0, 1fr));
+  gap: var(--gallery-gap);
+}
+
+.gallery--slides .gallery__rail {
+  grid-auto-flow: column;
+  /* One tile and a bit on a phone, so the row is visibly swipeable. */
+  grid-auto-columns: 86%;
+  grid-template-columns: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.gallery--slides .gallery__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery__item {
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  scroll-snap-align: start;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--muted);
+  cursor: zoom-in;
+  padding: 0;
+}
+
+.gallery__item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.6s var(--ease-out);
+}
+
+.gallery__item:hover img {
+  scale: 1.03;
+}
+
+/*
+ * Arrows. Hidden on touch-width screens, where the rail swipes and a button
+ * over the picture would only cover it. `grab` lives on the rail rather than
+ * the tiles so the cursor still says "zoom" over an image the pointer can open.
+ */
+.gallery__nav {
+  display: none;
+}
+
+@media (min-width: 40rem) {
+  .gallery--slides .gallery__rail {
+    grid-auto-columns: calc((100% - 1.5 * var(--gallery-gap)) / 2.5);
+    cursor: grab;
+  }
+
+  .gallery--slides .gallery__rail.is-dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    user-select: none;
+  }
+
+  .gallery--slides .gallery__rail.is-dragging .gallery__item {
+    cursor: grabbing;
+  }
+
+  .gallery__nav {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: inline-grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    translate: 0 -50%;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r-full);
+    background: var(--surface);
+    color: var(--foreground);
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .gallery__nav:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  .gallery__nav:disabled {
+    cursor: default;
+    opacity: 0.3;
+  }
+
+  .gallery__nav[hidden] {
+    display: none;
+  }
+
+  .gallery__nav--prev {
+    left: -1.25rem;
+  }
+
+  .gallery__nav--next {
+    right: -1.25rem;
+  }
+}
+
+/* Steps outside the reading column, which would only ever fit one tile and a
+   sliver of the next. The same step as a wide figure, so a post that carries
+   both does not appear to change its margins halfway down. */
+@media (min-width: 64rem) {
+  .gallery {
+    width: min(var(--reading-wide), 92vw);
+    margin-inline: calc(50% - min(var(--reading-wide), 92vw) / 2);
+  }
+
+  /* Two tiles and a half — the half is what says the set continues. */
+  .gallery--slides .gallery__rail {
+    grid-auto-columns: calc((100% - 1.5 * var(--gallery-gap)) / 2.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery__item img,
+  .gallery__nav {
+    transition: none;
+  }
+}
+
+/* Lightbox ----------------------------------------------------------------- */
+
+.lightbox {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #fff;
+}
+
+.lightbox::backdrop {
+  background: rgb(8 8 10 / 0.92);
+}
+
+.lightbox__inner {
+  display: grid;
+  height: 100%;
+  align-items: center;
+  justify-items: center;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+.lightbox__figure {
+  display: grid;
+  gap: 1rem;
+  max-width: min(80rem, 100%);
+  margin: 0;
+  justify-items: center;
+}
+
+.lightbox__figure img {
+  max-width: 100%;
+  /* Leaves room for the caption row under the image at any viewport height. */
+  max-height: calc(100dvh - 10rem);
+  border-radius: var(--r-md);
+  object-fit: contain;
+}
+
+.lightbox__caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+  /* Wide enough that a one-line caption stays on one line — the narrow measure
+     that suits body copy leaves a single word stranded here. */
+  max-width: min(90ch, 100%);
+  color: rgb(255 255 255 / 0.78);
+  font-size: var(--fs-s);
+  text-align: center;
+}
+
+.lightbox__text {
+  text-wrap: pretty;
+}
+
+.lightbox__count {
+  color: rgb(255 255 255 / 0.55);
+}
+
+/* Bare icons. The backdrop is already dark, so a filled control would only
+   add furniture around the photograph; a drop shadow covers the case where an
+   arrow lands over a bright edge of the image. */
+.lightbox__close,
+.lightbox__nav {
+  position: absolute;
+  display: inline-grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: rgb(255 255 255 / 0.7);
+  cursor: pointer;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.6));
+  transition: color 0.2s ease;
+}
+
+.lightbox__close:hover,
+.lightbox__nav:hover {
+  color: #fff;
+}
+
+.lightbox__close {
+  top: clamp(1rem, 3vw, 2rem);
+  right: clamp(1rem, 3vw, 2rem);
+}
+
+.lightbox__nav {
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.lightbox__nav--prev {
+  left: clamp(0.5rem, 3vw, 2rem);
+}
+
+.lightbox__nav--next {
+  right: clamp(0.5rem, 3vw, 2rem);
+}
+
+@media (max-width: 40rem) {
+  .lightbox__nav {
+    top: auto;
+    bottom: clamp(1rem, 4vw, 2rem);
+    translate: none;
+  }
+}
+
+/* Article hero meta -------------------------------------------------------- */
+
+/*
+ * The byline, the date, and the read time on one row, each fact led by its icon
+ * and parted by a hairline. The rule is a real element rather than a printed
+ * dash so it can vanish when the row wraps onto a second line, where a dangling
+ * separator would read as a mistake.
+ */
+.meta__fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.meta__fact svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.meta__rule {
+  width: 1px;
+  height: 0.9em;
+  flex-shrink: 0;
+  background: currentColor;
+  opacity: 0.28;
+}
+
+/* Any run of facts parted by hairlines rather than by punctuation. Inline-flex
+   so the rules sit on the text baseline and wrap with it. */
+.meta__facts--ruled {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.posthero__facts {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/*
+ * Narrow screens put the byline on one line and the two facts on the next. The
+ * rule between them goes with the break — a separator at the end of a line
+ * separates nothing and reads as a stray mark.
+ */
+@media (max-width: 40rem) {
+  .posthero__byline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .posthero__bylineRule {
+    display: none;
+  }
+
+  /* Portraits go too. At this width the row is already stacked, and a stack of
+     small faces costs more room than the names it decorates. */
+  .posthero__byline .avatar-stack {
+    display: none;
+  }
+
+  /*
+   * Stacking turns the horizontal axis into the cross axis, so the immersive
+   * opening's `justify-content: center` no longer reaches it and the rows would
+   * sit left inside a centred block. Centre them on the axis that now applies.
+   */
+  .posthero__head--center .posthero__byline {
+    align-items: center;
+  }
+}
+
+/* Below the facts, not among them: these are actions, not more facts. */
+.posthero__share {
+  margin-top: 0.9rem;
+}
+
+.posthero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.35rem;
+}
+
+/* The credit is annotation — set as small roman text rather than in the tracked
+   capitals the labels elsewhere use. */
+.posthero__credit {
+  display: block;
+  margin-top: 1rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+/* ==========================================================================
+   Recipe blocks
+   --------------------------------------------------------------------------
+   The four blocks a recipe adds to an article: the brief, the ingredients, the
+   method, and the cook's notes. They sit in the reading column with the prose,
+   so they are ruled and gridded rather than boxed and tinted — the brief is
+   the one exception, because it is the only thing on the page a reader might
+   come for on its own.
+
+   Two of them are interactive, and only one of those needs JavaScript. Ticking
+   an ingredient or finishing a step is a real checkbox and a sibling selector;
+   the servings stepper is the only thing here a script touches, because it has
+   to do arithmetic.
+
+   Olive is the only colour these blocks introduce, and it means exactly one
+   thing: done. Burnt orange stays the accent — group headings, the note marks,
+   links — so a ticked line can never be confused with a highlighted one.
+   ========================================================================== */
+
+/*
+ * Even spacing between a recipe block and whatever it follows, whether that is
+ * another block or the last paragraph of the article.
+ *
+ * Spaced by *position*, not by neighbour. Astro emits each block's hoisted
+ * script as an element in the flow, and although a `<script>` paints nothing it
+ * is still an element sibling — so `.recipe-block + .recipe-block` silently
+ * stops matching wherever one lands between two blocks. The brief is excluded
+ * because it is the first thing in the reading column and `.post-body` already
+ * carries the padding above it.
+ */
+.recipe-block:not(:first-child),
+.prose:not(:first-child) {
+  margin-top: clamp(2.25rem, 5vw, 3rem);
+}
+
+/* --- The brief ---------------------------------------------------------- */
+
+.brief {
+  display: grid;
+  gap: 1.25rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  padding: 1.35rem;
+}
+
+@media (min-width: 48rem) {
+  .brief {
+    padding: 1.75rem 2rem;
+  }
+}
+
+.brief__head {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.brief__yield {
+  margin: 0;
+  color: var(--accent);
+}
+
+.brief__difficulty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  margin: 0;
+}
+
+.brief__meaning {
+  color: var(--muted-foreground);
+}
+
+/* Four facts on one row above 40rem, two per row below it. A recipe is opened
+   to find out how long it takes, so the numbers are set at subhead scale and
+   the words above them are the small ones. */
+.brief__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+  margin: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 1.2rem;
+}
+
+@media (min-width: 40rem) {
+  .brief__facts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.brief__fact dt {
+  margin-bottom: 0.3rem;
+  color: var(--muted-foreground);
+}
+
+.brief__fact dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: var(--weight-title);
+  letter-spacing: var(--ls-title);
+}
+
+/* Its own ruled line under the four numbers, so the four columns stay level
+   and the note reads as the sentence the author wrote rather than as a clause
+   hung off the total. */
+.brief__rest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.75rem;
+  margin: -0.25rem 0 0;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  color: var(--muted-foreground);
+  font-size: var(--fs-s);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.brief__restLabel {
+  color: var(--accent);
+}
+
+.brief__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* --- Ingredients ------------------------------------------------------- */
+
+.ingredients {
+  display: grid;
+  gap: 1rem;
+}
+
+.ingredients__head,
+.method__head,
+.cooksnotes__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 1.5rem;
+  border-bottom: 1px solid var(--foreground);
+  padding-bottom: 0.6rem;
+}
+
+.ingredients__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.ingredients__group + .ingredients__group {
+  margin-top: 1.15rem;
+}
+
+.ingredients__groupHead {
+  margin-bottom: 0.3rem;
+  color: var(--accent);
+}
+
+.ingredients__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ingredient {
+  border-bottom: 1px solid var(--border);
+}
+
+/* The whole line is the label, so the target is the row and not a 17px box.
+   In a kitchen the pointer is a wet finger. */
+.ingredient__label {
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.8rem;
+  cursor: pointer;
+  padding: 0.55rem 0.4rem;
+  border-radius: var(--r-xs);
+  transition: background-color 0.18s ease;
+}
+
+.ingredient__label:hover {
+  background: var(--wash);
+}
+
+/*
+ * The tick is drawn on the input itself. The olive fill is what actually
+ * carries the state, and the check mark on top of it is the confirmation — so
+ * an engine that declines to paint a pseudo-element inside a checkbox still
+ * leaves a row that plainly reads as done.
+ */
+.ingredient__box {
+  display: grid;
+  width: 1.1rem;
+  height: 1.1rem;
+  appearance: none;
+  margin: 0.16rem 0 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--r-xs);
+  background: var(--surface);
+  cursor: pointer;
+  place-items: center;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.ingredient__box::after {
+  width: 0.52rem;
+  height: 0.28rem;
+  border-left: 2px solid var(--accent-foreground);
+  border-bottom: 2px solid var(--accent-foreground);
+  content: "";
+  opacity: 0;
+  rotate: -45deg;
+  translate: 0 -0.08rem;
+  transition: opacity 0.18s ease;
+}
+
+.ingredient__box:checked {
+  border-color: var(--done);
+  background: var(--done);
+}
+
+.ingredient__box:checked::after {
+  opacity: 1;
+}
+
+.ingredient__box:hover:not(:checked) {
+  border-color: var(--accent);
+}
+
+.ingredient__text {
+  min-width: 0;
+  font-size: var(--fs-m);
+  line-height: 1.5;
+  text-wrap: pretty;
+  transition: color 0.2s ease;
+}
+
+/* Struck through in olive rather than greyed out: the line has to stay
+   readable, because a cook ticks things off and then checks the list again. */
+.ingredient__box:checked ~ .ingredient__text {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+  text-decoration-color: var(--done);
+  text-decoration-thickness: 1px;
+}
+
+.ingredient__amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ingredient__note {
+  color: var(--muted-foreground);
+}
+
+/* --- The servings stepper ---------------------------------------------- */
+
+.scaler {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  padding: 0.2rem;
+}
+
+.scaler__btn {
+  display: grid;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  place-items: center;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.scaler__btn:hover:not(:disabled) {
+  background: var(--wash-accent);
+  color: var(--accent);
+}
+
+.scaler__btn:disabled {
+  color: var(--border-strong);
+  cursor: not-allowed;
+}
+
+.scaler__value {
+  min-width: 6.5rem;
+  color: var(--foreground);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+/* Only ever on screen while the amounts differ from the published ones, which
+   is the whole point of it: a scaled list has to say that it is scaled. */
+.scaler__flag {
+  color: var(--accent);
+}
+
+/* Metric or US, in the same pill as the stepper beside it: they are the two
+   things a reader changes about the list before they start cooking. */
+.units {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  padding: 0.2rem;
+}
+
+.units__btn {
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  padding: 0.35rem 0.85rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  font-size: var(--fs-label);
+  font-weight: 650;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.units__btn:hover:not(.is-on) {
+  color: var(--accent);
+}
+
+.units__btn.is-on {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* --- The method -------------------------------------------------------- */
+
+.method {
+  display: grid;
+  gap: 1rem;
+}
+
+.method__list {
+  display: grid;
+  gap: 1.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 2.15rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+/* The number is the checkbox. A step is finished by pressing the thing that
+   identifies it, and no second control has to be found and explained. */
+.step__mark {
+  position: relative;
+  display: grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  cursor: pointer;
+  place-items: center;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.step__mark:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.step__num,
+.step__check {
+  transition: opacity 0.18s ease;
+}
+
+/*
+ * Set in the sans, not the display face. A serif numeral at 14px inside a
+ * 2.15rem circle loses its thin strokes, and the same is true of every other
+ * small figure on the site — see the note under "Small figures" below.
+ */
+.step__num {
+  font-family: var(--font-sans);
+  font-size: var(--fs-s);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.step__check {
+  position: absolute;
+  opacity: 0;
+}
+
+.step__box:checked ~ .step__num {
+  opacity: 0;
+}
+
+.step__box:checked ~ .step__check {
+  opacity: 1;
+}
+
+.step:has(.step__box:checked) .step__mark {
+  border-color: var(--done);
+  background: var(--done);
+  color: var(--accent-foreground);
+}
+
+.step:has(.step__box:checked) .step__body,
+.step:has(.step__box:checked) .step__heading {
+  color: var(--muted-foreground);
+}
+
+.step__body {
+  display: grid;
+  gap: 0.3rem;
+  padding-top: 0.3rem;
+  transition: color 0.2s ease;
+}
+
+.step__heading {
+  color: var(--accent);
+}
+
+.step__text {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* --- Cook's notes ------------------------------------------------------ */
+
+.cooksnotes {
+  display: grid;
+  gap: 1rem;
+}
+
+/* No rule between notes. The marks line up down the left edge and the spacing
+   does the separating, which is the difference between a list and a table. */
+.cooksnotes__list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cooksnotes__item {
+  display: grid;
+  grid-template-columns: 0.9rem minmax(0, 1fr);
+  gap: 0.6rem;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.cooksnotes__mark {
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: var(--fs-m);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.cooksnotes__foot {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.cooksnotes__foot dt {
+  margin-bottom: 0.25rem;
+  color: var(--accent);
+}
+
+.cooksnotes__foot dd {
+  margin: 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+/* ==========================================================================
+   Prose
+   ========================================================================== */
+
+.prose {
+  font-size: var(--fs-l);
+  line-height: 1.7;
+}
+
+.prose > * + * {
+  margin-top: 1.45rem;
+}
+
+.prose p,
+.prose ul,
+.prose ol {
+  color: color-mix(in srgb, var(--foreground) 92%, transparent);
+  text-wrap: pretty;
+}
+
+/* Tailwind's preflight strips list markers; the reading column wants them. */
+.prose ul {
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.prose ol {
+  padding-left: 1.25rem;
+  list-style: decimal;
+}
+
+.prose li + li {
+  margin-top: 0.4rem;
+}
+
+.prose li::marker {
+  color: var(--accent);
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-title);
+}
+
+.prose h2 {
+  margin-top: 3rem;
+  margin-bottom: 0.85rem;
+  scroll-margin-top: 6rem;
+  font-size: var(--fs-h2);
+  font-weight: var(--weight-display);
+}
+
+.prose h3 {
+  margin-top: 2.25rem;
+  margin-bottom: 0.6rem;
+  scroll-margin-top: 6rem;
+  font-size: var(--fs-h3);
+  font-weight: var(--weight-title);
+}
+
+.prose h4 {
+  margin-top: 1.75rem;
+  font-size: var(--fs-h4);
+  font-weight: var(--weight-title);
+}
+
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--accent);
+}
+
+.prose strong {
+  font-weight: 650;
+}
+
+/* Pull quote: a tinted slab indented from the reading column. */
+.prose blockquote {
+  margin-inline: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--wash);
+  padding: 1.25rem 1.5rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 500;
+  letter-spacing: var(--ls-title);
+  line-height: 1.35;
+}
+
+.prose blockquote p {
+  margin: 0;
+}
+
+.prose blockquote p + p {
+  margin-top: 0.75rem;
+}
+
+.prose blockquote strong:first-child {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: var(--fs-label);
+  font-weight: 650;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+}
+
+.prose img {
+  border-radius: var(--r-md);
+}
+
+.prose code {
+  border-radius: var(--r-xs);
+  background: var(--wash);
+  padding: 0.14em 0.38em;
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--border-strong);
+  margin-block: 2.5rem;
+}
+
+.astro-code {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 1.25rem 1.35rem;
+  font-size: var(--fs-s);
+  line-height: 1.7;
+}
+
+.astro-code code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Shiki, light tokens only — the theme has one mode. */
+.astro-code,
+.astro-code span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+  text-decoration: var(--shiki-light-text-decoration);
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+.hover-fade-group:hover > *:not(:hover) {
+  opacity: 0.5;
+}
+
+.hover-fade-group > * {
+  transition: opacity 0.25s ease;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.underline-hover {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  padding-bottom: 1px;
+  transition: background-size 0.3s var(--ease-out);
+}
+
+.underline-hover:hover {
+  background-size: 100% 1px;
+}
+
+/* ==========================================================================
+   Save toast
+   --------------------------------------------------------------------------
+   The confirmation that a post has been added to the reading list, bottom right.
+
+   It says the one thing about the feature a reader cannot guess — that the list
+   lives in their browser — at the moment they first rely on it, rather than
+   leaving it on a page they may never open.
+
+   It sits above the header and the progress bar but below the drawer, so an open
+   menu covers it rather than fighting it. A native `<dialog>` is in the top
+   layer and covers it regardless.
+   ========================================================================== */
+
+.toast {
+  position: fixed;
+  right: var(--gutter);
+  bottom: var(--gutter);
+  z-index: 280;
+  display: grid;
+  width: min(23rem, calc(100vw - var(--gutter) * 2));
+  gap: 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  padding: 1.15rem;
+  opacity: 0;
+  translate: 0 0.75rem;
+  transition:
+    opacity 0.24s var(--ease-out),
+    translate 0.24s var(--ease-out);
+}
+
+.toast.is-open {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.toast__body {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.toast__note {
+  color: var(--muted-foreground);
+  text-wrap: pretty;
+}
+
+/* Ink rather than the accent: it is the way out of a confirmation, not the
+   thing the page is asking for. */
+.toast__action {
+  justify-content: center;
+  width: 100%;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--ink-foreground);
+}
+
+.toast__action:hover {
+  border-color: var(--ink-surface);
+  background: var(--ink-surface);
+  color: var(--ink-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    translate: 0 0;
+  }
+}
+
+/* ==========================================================================
+   Print
+   --------------------------------------------------------------------------
+   A recipe is the one thing on this site somebody genuinely prints, so the
+   print sheet is a real target rather than an afterthought. Everything that
+   cannot be pressed on paper comes off, the ingredients and the method are kept
+   whole across page breaks, and links print their destinations — a printed
+   recipe with "see the pantry note" in it and no address is a dead end.
+
+   Amounts print at whatever scale the reader left the stepper on, which is the
+   correct answer: they scaled it because that is the quantity they are cooking.
+   ========================================================================== */
+
+@media print {
+  /* Without a page box the sheet takes whatever margin the browser feels like,
+     and with margins off the type sits against the edge of the paper. */
+  @page {
+    margin: 15mm;
+  }
+
+  /* The `--fs-*` scale is tuned for a viewport. Rebasing the root is one line
+     and every size on the sheet follows it down. */
+  html {
+    font-size: 11pt;
+  }
+
+  .site-header,
+  .site-footer,
+  .site-drawer,
+  .drawer-scrim,
+  .search-dialog,
+  .share-sheet,
+  .reading-progress,
+  .skip-link,
+  .posthero__actions,
+  .post-share,
+  .brief__actions,
+  .scaler,
+  .units,
+  .rail-nav,
+  .lightbox,
+  .toast,
+  /* A gallery is a scroller full of thumbnails: it cannot be swiped on paper,
+     its arrows do nothing, and its tiles run off the sheet. The wide figure is
+     the one photograph a printed recipe is worth spending ink on. */
+  .gallery,
+  /* Scoped to the one block rather than to `.section`: hiding every section
+     would also empty the About and Contact pages, which people do print. */
+  [aria-labelledby="post-related"] {
+    display: none !important;
+  }
+
+  :root {
+    --background: #ffffff;
+    --surface: #ffffff;
+    --foreground: #000000;
+    --muted-foreground: #333333;
+    --border: #cccccc;
+    --border-strong: #999999;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  /* Ink is expensive and a tinted panel prints as a grey box. */
+  .brief,
+  .note-card,
+  .tile,
+  .band {
+    border-color: #999999;
+    background: transparent;
+  }
+
+  .container-reading,
+  .container {
+    max-width: none;
+    padding-inline: 0;
+  }
+
+  /* The reading column is the whole page in print, so a wide figure has nothing
+     left to step outside of — and the negative margin that does it would run it
+     off the edge of the sheet. */
+  .figure--wide {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .prose a[href^="http"]::after,
+  .prose a[href^="/"]::after {
+    color: #555555;
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    word-break: break-all;
+  }
+
+  /* An ingredient list split over a page break is the thing that makes people
+     give up on printing recipes. */
+  .brief,
+  .ingredients__group,
+  .step,
+  .cooksnotes {
+    break-inside: avoid;
+  }
+
+  /* `clamp(…, 5vw, …)` resolves against the page box in print, which is
+     narrower than the screen it was tuned for. State the gap outright. */
+  .recipe-block:not(:first-child),
+  .prose:not(:first-child) {
+    margin-top: 1.5rem;
+  }
+
+  .ingredient__box,
+  .step__box {
+    /* A printed tick box is useful; a printed olive fill is not. */
+    background: transparent !important;
+    border-color: #666666 !important;
+  }
+
+  /* The cover and immersive openings lay white type over the photograph, and
+     nothing guarantees a picture behind text prints at all. Both flatten on
+     paper: the photograph becomes a plain block, the title block goes back to
+     ink, and the centred immersive head returns to the left edge. */
+  .posthero-cover,
+  .posthero-immersive {
+    display: block;
+    min-height: 0;
+    background: transparent;
+  }
+
+  .posthero-cover__media,
+  .posthero-immersive__media {
+    position: static;
+  }
+
+  .posthero-cover__scrim,
+  .posthero-immersive__scrim {
+    display: none;
+  }
+
+  .posthero__head--onImage,
+  .posthero__head--onImage .posthero__standfirst,
+  .posthero__credit--onImage {
+    color: #000000;
+  }
+
+  .posthero__head--center {
+    justify-items: start;
+    text-align: left;
+  }
+
+  /* The immersive opening reserves a viewport for itself. On paper the
+     photograph is a block like any other and the title follows it. */
+  .posthero-immersive__inner {
+    padding-block: 1.25rem 0;
+  }
+
+  .posthero-immersive__stage {
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  .posthero-cover__inner {
+    padding-block: 1.25rem 0;
+  }
+
+  .posthero__head--center .meta {
+    justify-content: flex-start;
+  }
+
+  .tag--glass,
+  .cook-time--onImage {
+    border-color: #999999;
+    background: transparent;
+    color: #000000;
+  }
+
+  .meta--onDark,
+  .meta--onDark .meta__byline,
+  .meta--onDark .meta__facts,
+  .meta--onDark .meta__conjunction {
+    color: #000000;
+  }
+
+  /* One photograph is worth the ink; a page of thumbnails is not. Every frame
+     drops its ratio first, so the picture shrinks to the cap rather than being
+     cropped to a box the sheet is too narrow for. */
+  .media,
+  .posthero-banner__media,
+  .posthero-cover__media,
+  .posthero-immersive__media {
+    aspect-ratio: auto;
+    height: auto;
+    overflow: visible;
+    background: transparent;
+  }
+
+  .media img,
+  .posthero-banner__media img,
+  .posthero-cover__media img,
+  .posthero-immersive__media img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 9cm;
+    margin-inline: auto;
+    object-fit: contain;
+  }
+}
+
+/* ==========================================================================
+   Motion
+   --------------------------------------------------------------------------
+   Two layers, and they never overlap.
+
+   1. Openers. The blocks at the top of a page are on screen before a scroll
+      can happen, so they animate once on load with a short stagger.
+   2. Everything below the fold is scroll-driven, via view timelines where the
+      browser has them. There is no JavaScript observer and no hidden state:
+      a browser without view timelines simply renders the finished layout.
+
+   The reduced-motion block at the end flattens the lot.
+   ========================================================================== */
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+}
+
+@keyframes settle-in {
+  from {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The front page hero is not an opener: the photograph fills the top of the
+   page, so nothing may move it or fade it — a rise would show the page behind
+   it. It settles in place, and only the copy fades. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero__media img {
+    animation: settle-in 1.6s var(--ease-out) backwards;
+  }
+
+  .hero__copy {
+    animation: fade-in 0.8s var(--ease-out) 0.15s backwards;
+  }
+}
+
+@keyframes sweep-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Page openers: the front-page lead, page headers, article heads. */
+  .opener > * {
+    animation: rise-in 0.65s var(--ease-out) backwards;
+  }
+
+  .opener > :nth-child(2) {
+    animation-delay: 0.08s;
+  }
+
+  .opener > :nth-child(3) {
+    animation-delay: 0.16s;
+  }
+
+  .opener > :nth-child(n + 4) {
+    animation-delay: 0.24s;
+  }
+
+  /* The lead cover settles from a slight oversize. It scales from the centre
+     inside a clipped frame, so the movement can never uncover an edge. */
+  .opener .media img {
+    animation: settle-in 1.4s var(--ease-out) backwards;
+  }
+
+  @supports (animation-timeline: view()) {
+    /* Blocks and cards rise as they enter. `entry 0%` to `cover N%` means the
+       movement finishes shortly after the element clears the bottom edge, so
+       nothing is still moving by the time it is read. */
+    .reveal,
+    .grid-tall > *,
+    .rail > *,
+    .trend-grid > * {
+      animation: rise-in 0.9s var(--ease-out) both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 15%;
+    }
+
+    /* Section rules draw themselves in from the left. */
+    .section-head {
+      animation: sweep-in 0.9s var(--ease-out) both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 18%;
+      transform-origin: left center;
+    }
+  }
+}
+
+/*
+ * Fallback reveal for browsers without view timelines. Content is visible by
+ * default so it never depends on JavaScript; the init script in BaseLayout
+ * only adds `can-reveal` to <html> when IntersectionObserver exists, the
+ * reader has not asked for reduced motion, and view timelines are missing.
+ */
+.reveal,
+.grid-tall > *,
+.rail > *,
+.trend-grid > * {
+  opacity: 1;
+  transform: none;
+}
+
+html.can-reveal :is(.reveal, .grid-tall > *, .rail > *, .trend-grid > *) {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.65s var(--ease-out),
+    transform 0.65s var(--ease-out);
+}
+
+html.can-reveal :is(.reveal, .grid-tall > *, .rail > *, .trend-grid > *).is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

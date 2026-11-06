@@ -1,0 +1,237 @@
+---
+import Icon from "@/components/ui/Icon.astro";
+import {
+  clampServings,
+  formatQuantity,
+  ingredientNoun,
+  SERVINGS_MAX_FACTOR,
+  SERVINGS_MIN_FACTOR,
+  UNIT_SYSTEM_LABELS,
+  unitSystems,
+  DEFAULT_UNIT_SYSTEM,
+} from "@/config/recipe";
+import type { RecipeData } from "@/lib/recipes";
+
+/**
+ * The shopping list, with a servings stepper on it.
+ *
+ * The stepper is the only thing in the recipe blocks that needs JavaScript, and
+ * it works because amounts are stored as a number and a unit rather than as
+ * "3/4 cup water" — the script multiplies `data-quantity` and reprints it as a
+ * kitchen fraction, and never has to parse a sentence. See the `ingredient`
+ * schema in `src/content.config.ts` for why it is shaped that way.
+ *
+ * Ticking a line off needs no script at all: it is a real checkbox and a
+ * sibling selector. That matters more than it sounds — the boxes work while
+ * the page is still loading, and they keep working if the script never runs.
+ */
+interface Props {
+  recipe: RecipeData;
+  class?: string;
+}
+
+const { recipe, class: className = "" } = Astro.props;
+const min = clampServings(Math.floor(recipe.servings * SERVINGS_MIN_FACTOR), recipe.servings);
+const max = clampServings(Math.round(recipe.servings * SERVINGS_MAX_FACTOR), recipe.servings);
+---
+
+<section
+  class:list={["ingredients", className]}
+  id="ingredients"
+  aria-labelledby="ingredients-title"
+  data-scaler
+  data-base-servings={recipe.servings}
+  data-min-servings={min}
+  data-max-servings={max}
+>
+  <div class="ingredients__head">
+    <h2 class="txt-h3" id="ingredients-title">Ingredients</h2>
+
+    <div class="ingredients__controls">
+      <div class="scaler">
+        <button
+          type="button"
+          class="scaler__btn"
+          data-scaler-down
+          disabled={recipe.servings <= min}
+          aria-label="Fewer servings"
+        >
+          <Icon name="minus" size={15} />
+        </button>
+        {/* One live region for the whole control, so a screen reader hears
+            "serves 8, doubled" once rather than every amount changing. */}
+        <span class="scaler__value" aria-live="polite" data-scaler-label>
+          Serves {recipe.servings}
+        </span>
+        <button
+          type="button"
+          class="scaler__btn"
+          data-scaler-up
+          disabled={recipe.servings >= max}
+          aria-label="More servings"
+        >
+          <Icon name="plus" size={15} />
+        </button>
+      </div>
+
+      {/* Rendered hidden: without the script the list is already correct in
+          the units it was written in, and a switch that cannot switch is worse
+          than no switch. */}
+      <div class="units" role="group" aria-label="Units" data-units hidden>
+        {unitSystems.map((system) => (
+          <button
+            type="button"
+            class:list={["units__btn", system === DEFAULT_UNIT_SYSTEM && "is-on"]}
+            data-units-set={system}
+            aria-pressed={system === DEFAULT_UNIT_SYSTEM ? "true" : "false"}
+          >
+            {UNIT_SYSTEM_LABELS[system]}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {
+    recipe.ingredients.map((group) => (
+      <div class="ingredients__group">
+        {group.heading && <p class="label ingredients__groupHead">{group.heading}</p>}
+        <ul class="ingredients__list">
+          {group.items.map((item) => (
+            <li class="ingredient">
+              <label class="ingredient__label">
+                <input type="checkbox" class="ingredient__box" />
+                <span class="ingredient__text">
+                  {item.quantity !== undefined && (
+                    <>
+                      <span
+                        class="ingredient__amount"
+                        data-quantity={item.quantity}
+                        data-fixed={item.fixed ? "true" : undefined}
+                      >
+                        {formatQuantity(item.quantity)}
+                      </span>{" "}
+                    </>
+                  )}
+                  {item.unit && (
+                    <>
+                      <span class="ingredient__unit" data-unit={item.unit}>
+                        {item.unit}
+                      </span>{" "}
+                    </>
+                  )}
+                  <span data-noun data-singular={item.plural ? item.item : undefined} data-plural={item.plural}>
+                    {ingredientNoun(item, item.quantity)}
+                  </span>
+                  {item.note && <span class="ingredient__note">, {item.note}</span>}
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))
+  }
+</section>
+
+<script>
+  import {
+    convertMeasure,
+    formatQuantity,
+    storedUnitSystem,
+    UNITS_EVENT,
+    UNITS_STORAGE_KEY,
+    type UnitSystem,
+  } from "@/config/recipe";
+
+  document.querySelectorAll<HTMLElement>("[data-scaler]").forEach((block) => {
+    const base = Number(block.dataset.baseServings);
+    const min = Number(block.dataset.minServings);
+    const max = Number(block.dataset.maxServings);
+    const label = block.querySelector<HTMLElement>("[data-scaler-label]");
+    const down = block.querySelector<HTMLButtonElement>("[data-scaler-down]");
+    const up = block.querySelector<HTMLButtonElement>("[data-scaler-up]");
+    const units = block.querySelector<HTMLElement>("[data-units]");
+    const unitButtons = Array.from(
+      block.querySelectorAll<HTMLButtonElement>("[data-units-set]"),
+    );
+    const amounts = Array.from(block.querySelectorAll<HTMLElement>("[data-quantity]"));
+    if (!base || !label) return;
+
+    let servings = base;
+    let system = storedUnitSystem();
+
+    const render = () => {
+      const factor = servings / base;
+
+      amounts.forEach((amount) => {
+        const quantity = Number(amount.dataset.quantity);
+        /* A tin size or a sheet pan does not double when the recipe does, so
+           those lines are printed as written whatever the stepper says. */
+        const scaled = amount.dataset.fixed === "true" ? quantity : quantity * factor;
+
+        /* Scale first, convert second: the arithmetic stays in the units the
+           recipe was written in, and only the printed line changes kitchens. */
+        const unit = amount.parentElement?.querySelector<HTMLElement>("[data-unit]") ?? null;
+        const measure = convertMeasure(scaled, unit?.dataset.unit, system);
+        amount.textContent = formatQuantity(measure.quantity);
+        if (unit && measure.unit) unit.textContent = measure.unit;
+
+        /* "1 lemon" becomes "2 lemons". Only where the author gave both forms —
+           a unit already carries the plural, so most lines have nothing to do. */
+        const noun = amount.parentElement?.querySelector<HTMLElement>("[data-noun]");
+        const singular = noun?.dataset.singular;
+        const plural = noun?.dataset.plural;
+        if (noun && singular && plural) {
+          noun.textContent = Math.abs(scaled - 1) > 0.001 ? plural : singular;
+        }
+      });
+
+      /* The count is the whole label — no second word saying it moved. Once it
+         differs from the published servings it takes the accent, which is the
+         quietest way to say the amounts below are no longer the printed ones. */
+      label.textContent = `Serves ${servings}`;
+      label.classList.toggle("scaler__flag", servings !== base);
+
+      unitButtons.forEach((button) => {
+        const on = button.dataset.unitsSet === system;
+        button.classList.toggle("is-on", on);
+        button.setAttribute("aria-pressed", String(on));
+      });
+
+      if (down) down.disabled = servings <= min;
+      if (up) up.disabled = servings >= max;
+    };
+
+    const step = (by: number) => {
+      servings = Math.min(Math.max(servings + by, min), max);
+      render();
+    };
+
+    const setSystem = (next: UnitSystem, announce = true) => {
+      system = next;
+      render();
+      if (!announce) return;
+      try {
+        localStorage.setItem(UNITS_STORAGE_KEY, next);
+      } catch {
+        /* A browser refusing storage still gets the switch, just not the memory. */
+      }
+      document.dispatchEvent(new CustomEvent(UNITS_EVENT, { detail: { system: next } }));
+    };
+
+    down?.addEventListener("click", () => step(-1));
+    up?.addEventListener("click", () => step(1));
+    unitButtons.forEach((button) =>
+      button.addEventListener("click", () => setSystem(button.dataset.unitsSet as UnitSystem)),
+    );
+    /* A second recipe block on the page follows the one that was pressed. */
+    document.addEventListener(UNITS_EVENT, (event) => {
+      const next = (event as CustomEvent<{ system: UnitSystem }>).detail.system;
+      if (next !== system) setSystem(next, false);
+    });
+
+    if (units) units.hidden = false;
+    render();
+  });
+</script>

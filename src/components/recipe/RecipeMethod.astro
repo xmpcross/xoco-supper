@@ -1,0 +1,49 @@
+---
+import Icon from "@/components/ui/Icon.astro";
+import type { RecipeData } from "@/lib/recipes";
+
+/**
+ * The method. Every step is addressable (`#step-3`) because the structured data
+ * for the recipe points at those ids, and every step can be ticked off.
+ *
+ * The number *is* the checkbox. A cook coming back to the page with one hand
+ * free needs a target, not a control to find first — and pressing the thing
+ * that identifies the step is the shortest possible explanation of what it
+ * does. No script: a checkbox and `:has()`.
+ */
+interface Props {
+  recipe: RecipeData;
+  class?: string;
+}
+
+const { recipe, class: className = "" } = Astro.props;
+---
+
+<section class:list={["method", className]} aria-labelledby="method-title">
+  <div class="method__head">
+    <h2 class="txt-h3" id="method-title">Method</h2>
+    <p class="label txt-dim">{recipe.steps.length} steps</p>
+  </div>
+
+  <ol class="method__list" data-units-text>
+    {
+      recipe.steps.map((step, index) => (
+        <li class="step" id={`step-${index + 1}`}>
+          <label class="step__mark">
+            <input type="checkbox" class="step__box sr-only" />
+            <span class="sr-only">{`Mark step ${index + 1} done`}</span>
+            <span class="step__num" aria-hidden="true">
+              {index + 1}
+            </span>
+            <Icon name="check" size={15} class="step__check" />
+          </label>
+
+          <div class="step__body">
+            {step.heading && <p class="label step__heading">{step.heading}</p>}
+            <p class="step__text">{step.body}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</section>
